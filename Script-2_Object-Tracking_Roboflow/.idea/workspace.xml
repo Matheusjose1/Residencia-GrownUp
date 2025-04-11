@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="2edfaca0-ffc9-45c4-810f-557c66e35a00" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/.idea/Residência GrowUp.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-1_Stitching-images/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/.idea/Script-2_Object-Tracking.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Augmented-Reality.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/ImagemComparison.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Imagens/Exemplo2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Imagens/ExemploLixeira.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Imagens/ExemploLixeira2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Imagens/Lixeira.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Imagens/OutroExemplo.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Object-Tracking.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-2_Object-Tracking/Template-match.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2vY9wAepTCmmwC8oMcesrIUmTd2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.ImagemComparison.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Object-Tracking.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Rastreamento.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Rastreamento2.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mathe/Documents/Estudos/Residencia-GrownUp/Script-2_Object-Tracking&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="ImagemComparison" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Script-2_Object-Tracking" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ImagemComparison.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.ImagemComparison" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-4f4e415b4190-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.26053.29" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2edfaca0-ffc9-45c4-810f-557c66e35a00" name="Changes" comment="" />
+      <created>1744311376812</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1744311376812</updated>
+    </task>
+    <servers />
+  </component>
+</project>

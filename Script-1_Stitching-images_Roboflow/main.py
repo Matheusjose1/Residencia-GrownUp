@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 
 #Carregando imagens
-image1 = cv2.imread('1.png')
-image2 = cv2.imread('2.png')
+image1 = cv2.imread('Imagens/Imagem.png')
+image2 = cv2.imread('Imagens/Imagem2.png')
 
 #Convertendo para escala cinza
 

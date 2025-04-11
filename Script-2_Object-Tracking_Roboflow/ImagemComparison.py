@@ -3,8 +3,8 @@ import numpy as np
 
 #Compara explicitamente as imagens
 
-original = cv2.imread('Exemplo2.png')
-image_to_compare = cv2.imread('ExemploLixeira2.png')
+original = cv2.imread('Imagens/Lixeira.png')
+image_to_compare = cv2.imread('Imagens/ExemploLixeira.png')
 
 original = cv2.resize(original,(1000,650))
 image_to_compare = cv2.resize(image_to_compare,(1000,650))
