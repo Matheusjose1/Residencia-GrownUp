@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2edfaca0-ffc9-45c4-810f-557c66e35a00" name="Changes" comment="" />
+    <list default="true" id="2edfaca0-ffc9-45c4-810f-557c66e35a00" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/Script-Feature-Detection-and-matching.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/Feature-Detection-and-Matching" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-Feature-Detection-and-matching/Feature-Detection-and-Matching" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
