@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the reference image
-reference_image = cv2.imread('ExemploLixeira.png')
+reference_image = cv2.imread('Imagens/ExemploLixeira.png')
 
 # Convert reference image to grayscale
 gray_reference = cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)

@@ -3,6 +3,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 
+#Captura o objeto pela webcan
 
 def template_match(template, target, method=cv2.TM_CCOEFF_NORMED, threshold=0.8):
     """

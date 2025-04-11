@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+#Compara explicitamente as imagens
+
 original = cv2.imread('Exemplo2.png')
 image_to_compare = cv2.imread('ExemploLixeira2.png')
 
