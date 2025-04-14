@@ -1,0 +1,7 @@
+imagem_1,imagem_2,algoritmo,similaridade_%,mesma_lixeira,imagem_matches
+ExemploLixeira-Distante.png,ExemploLixeira.png,SIFT,22.27,NÃO,matches/ExemploLixeira-Distante.png_ExemploLixeira.png_sift.jpg
+ExemploLixeira-Distante.png,Lixeira-Perfil.png,SIFT,2.12,NÃO,matches/ExemploLixeira-Distante.png_Lixeira-Perfil.png_sift.jpg
+ExemploLixeira-Distante.png,Lixeiras.png,SIFT,1.16,NÃO,matches/ExemploLixeira-Distante.png_Lixeiras.png_sift.jpg
+ExemploLixeira.png,Lixeira-Perfil.png,SIFT,1.92,NÃO,matches/ExemploLixeira.png_Lixeira-Perfil.png_sift.jpg
+ExemploLixeira.png,Lixeiras.png,SIFT,1.38,NÃO,matches/ExemploLixeira.png_Lixeiras.png_sift.jpg
+Lixeira-Perfil.png,Lixeiras.png,SIFT,9.85,NÃO,matches/Lixeira-Perfil.png_Lixeiras.png_sift.jpg
