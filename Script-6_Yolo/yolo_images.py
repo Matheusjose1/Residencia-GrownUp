@@ -23,7 +23,6 @@ counter = object_counter.ObjectCounter(
 )
 
 # Processa todas as imagens da pasta
-# Processa todas as imagens da pasta
 for img_name in os.listdir(image_folder):
     if img_name.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
         image_path = os.path.join(image_folder, img_name)
