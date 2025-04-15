@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
+import numpy as np
 import cv2
 import os
 
@@ -12,7 +13,7 @@ def comparar_imagens(img1_path, img2_path, algoritmo):
 
     if algoritmo == 'ORB':
         detector = cv2.ORB_create()
-        matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
     elif algoritmo == 'SIFT':
         detector = cv2.SIFT_create()
         matcher = cv2.BFMatcher()
@@ -29,13 +30,36 @@ def comparar_imagens(img1_path, img2_path, algoritmo):
         matches = matcher.knnMatch(des1, des2, k=2)
         good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
     else:
-        matches = matcher.match(des1, des2)
-        good_matches = sorted(matches, key=lambda x: x.distance)
+        matches = matcher.knnMatch(des1, des2, k=2)
+        good_matches = []
+        for m, n in matches:
+            if m.distance < 0.75 * n.distance:
+                good_matches.append(m)
 
-    similaridade = len(good_matches) / max(len(kp1), len(kp2)) * 100
-    resultado = cv2.drawMatches(cv2.imread(img1_path), kp1, cv2.imread(img2_path), kp2, good_matches[:20], None, flags=2)
+    if len(good_matches) > 4:
+        src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1,1,2)
+        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1,1,2)
+
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        matches_mask = mask.ravel().tolist()
+        consistentes = sum(matches_mask)
+        similaridade = consistentes / max(len(kp1), len(kp2)) * 100
+    else:
+        similaridade = 0
+        matches_mask = None
+
+    resultado = cv2.drawMatches(
+        cv2.imread(img1_path), kp1,
+        cv2.imread(img2_path), kp2,
+        good_matches[:20], None,
+        matchColor=(0, 255, 0),
+        singlePointColor=None,
+        matchesMask=matches_mask[:20] if matches_mask else None,
+        flags=2
+    )
 
     return resultado, similaridade, good_matches
+
 
 def escolher_arquivo(label):
     filepath = filedialog.askopenfilename(filetypes=[("Imagens", "*.jpg *.png")])
