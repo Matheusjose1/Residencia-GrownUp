@@ -1,0 +1,4 @@
+imagem_1,imagem_2,algoritmo,similaridade_%,classificacao,resultado_path
+PAP-0005 Cad.jpg,PAP-0005 Op.jpg,SIFT,1.25,Verdadeiro Negativo (TN),resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg
+PAP-0005 Cad.jpg,PAP-0005 Op.jpg,SIFT,1.25,Falso Negativo (FN),resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg
+PAP-0005 Cad.jpg,PAP-0005 Op.jpg,ORB,0.6,Falso Negativo (FN),resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg

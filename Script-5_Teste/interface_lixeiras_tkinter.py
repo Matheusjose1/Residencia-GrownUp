@@ -28,12 +28,12 @@ def comparar_imagens(img1_path, img2_path, algoritmo):
 
     if algoritmo == 'SIFT':
         matches = matcher.knnMatch(des1, des2, k=2)
-        good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
+        good_matches = [m for m, n in matches if m.distance < 0.7 * n.distance]
     else:
         matches = matcher.knnMatch(des1, des2, k=2)
         good_matches = []
         for m, n in matches:
-            if m.distance < 0.75 * n.distance:
+            if m.distance < 0.7 * n.distance:
                 good_matches.append(m)
 
     if len(good_matches) > 4:
@@ -80,9 +80,22 @@ def iniciar_comparacao():
 
     if resultado is None:
         messagebox.showerror("Erro", "Não foi possível detectar características.")
+    # Classificação com base no threshold
+    mesma_lixeira_predita = similaridade >= THRESHOLD
+    mesma_lixeira_real = rotulo_real.get()
+
+    if mesma_lixeira_predita and mesma_lixeira_real:
+        classificacao = "Verdadeiro Positivo (TP)"
+    elif mesma_lixeira_predita and not mesma_lixeira_real:
+        classificacao = "Falso Positivo (FP)"
+    elif not mesma_lixeira_predita and not mesma_lixeira_real:
+        classificacao = "Verdadeiro Negativo (TN)"
+    else:
+        classificacao = "Falso Negativo (FN)"
         return
 
-    texto_resultado.set(f"Similaridade: {similaridade:.2f}% → {'MESMA' if similaridade >= THRESHOLD else 'DIFERENTE'}")
+    texto_resultado.set(f"Similaridade: {similaridade:.2f}%\nResultado: {classificacao}")
+
 
     cv2.imwrite("resultado_match.jpg", resultado)
     img = Image.open("resultado_match.jpg")
@@ -104,6 +117,7 @@ file_1 = tk.StringVar()
 file_2 = tk.StringVar()
 algoritmo_selecionado = tk.StringVar(value="SIFT")
 texto_resultado = tk.StringVar()
+rotulo_real = tk.BooleanVar(value=False)
 
 # Escolha de imagens
 tk.Button(frame, text="Selecionar Imagem 1", command=lambda: file_1.set(escolher_arquivo(label_img1))).grid(row=0, column=0, padx=5, pady=5)

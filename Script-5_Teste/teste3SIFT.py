@@ -3,6 +3,7 @@ import numpy as np
 import os
 import csv
 from itertools import combinations
+import re
 
 THRESHOLD = 70  # % de similaridade mínima
 
@@ -50,12 +51,28 @@ def desenhar_matches(img1, img2, kp1, kp2, matches, output_path):
     resultado = cv2.drawMatches(img1, kp1, img2, kp2, matches[:20], None, flags=2)
     cv2.imwrite(output_path, resultado)
 
+def extrair_id_e_tipo(nome_arquivo):
+    match = re.match(r'(PAP-\d+)\s+(Cad|Op)', nome_arquivo, re.IGNORECASE)
+    if match:
+        return match.group(1).upper(), match.group(2).capitalize()
+    return None, None
+
+
 def processar_imagens(diretorio_imagens, algoritmo='orb', salvar_imgs=True):
     imagens = [os.path.join(diretorio_imagens, f) for f in os.listdir(diretorio_imagens) if f.lower().endswith(('.jpg', '.png'))]
     resultados = []
     os.makedirs("matches", exist_ok=True)
 
     for img1_path, img2_path in combinations(imagens, 2):
+        nome1 = os.path.basename(img1_path)
+        nome2 = os.path.basename(img2_path)
+
+        id1, tipo1 = extrair_id_e_tipo(nome1)
+        id2, tipo2 = extrair_id_e_tipo(nome2)
+
+        if id1 != id2 or {tipo1, tipo2} != {'Cad', 'Op'}:
+            continue
+
         if algoritmo == 'orb':
             mesma, sim, matches, kp1, kp2, img1, img2 = comparar_orb(img1_path, img2_path)
         elif algoritmo == 'sift':
@@ -63,10 +80,8 @@ def processar_imagens(diretorio_imagens, algoritmo='orb', salvar_imgs=True):
         else:
             raise ValueError("Algoritmo inválido. Use 'orb' ou 'sift'.")
 
-        nome1 = os.path.basename(img1_path)
-        nome2 = os.path.basename(img2_path)
-        match_img_path = f"matches/{nome1.replace('.jpg', '')}_{nome2.replace('.jpg', '')}_{algoritmo}.jpg"
-
+        match_img_path = f"matches/{nome1.replace('.jpg', '')}_{nome2.replace('.jpg','')}_{algoritmo}.jpg"
+        
         if salvar_imgs:
             desenhar_matches(img1, img2, kp1, kp2, matches, match_img_path)
 
