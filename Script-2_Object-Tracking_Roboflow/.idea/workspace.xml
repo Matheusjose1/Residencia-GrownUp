@@ -5,16 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2edfaca0-ffc9-45c4-810f-557c66e35a00" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Augmented-Reality.py" beforeDir="false" afterPath="$PROJECT_DIR$/Augmented-Reality.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ImagemComparison.py" beforeDir="false" afterPath="$PROJECT_DIR$/ImagemComparison.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Imagens/Exemplo2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Imagens/ExemploLixeira.png" beforeDir="false" afterPath="$PROJECT_DIR$/Imagens/ExemploLixeira.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Imagens/ExemploLixeira2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Imagens/Lixeira.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Imagens/OutroExemplo.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Object-Tracking.py" beforeDir="false" afterPath="$PROJECT_DIR$/Template-tracking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Template-match.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-3_Detector-Objetos/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-3_Detector-Objetos/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/interface_resultado.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/interface_resultado.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/resultado_comparacao.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/resultado_comparacao.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/resultado_match.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/resultado_match.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-6_Yolo/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-6_Yolo/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,21 +35,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Augmented-Reality.executor": "Run",
-    "Python.ImagemComparison.executor": "Run",
-    "Python.Object-Tracking.executor": "Run",
-    "Python.Rastreamento.executor": "Run",
-    "Python.Rastreamento2.executor": "Run",
-    "Python.Template-match.executor": "Run",
-    "Python.Template-tracking.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/mathe/Documents/Estudos/Residencia-GrownUp/Script-2_Object-Tracking"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Augmented-Reality.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ImagemComparison.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Object-Tracking.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Rastreamento.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Rastreamento2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Template-match.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Template-tracking.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mathe/Documents/Estudos/Residencia-GrownUp/Script-2_Object-Tracking&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

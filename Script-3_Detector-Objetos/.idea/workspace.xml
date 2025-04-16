@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ccfd4393-31f5-467e-ad4d-248903a0fe01" name="Changes" comment="" />
+    <list default="true" id="ccfd4393-31f5-467e-ad4d-248903a0fe01" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/interface_resultado.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/interface_resultado.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/resultado_comparacao.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/resultado_comparacao.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-5_Teste/resultado_match.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-5_Teste/resultado_match.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-6_Yolo/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-6_Yolo/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,9 +20,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="2vYPOf3nUvPlh7D4lc5gCiKTOYH" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -25,7 +32,8 @@
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "<unknown>"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/mathe/Documents/Estudos/Residencia-GrownUp/Script-3_Detector-Objetos"
   }
 }]]></component>
   <component name="RunManager">

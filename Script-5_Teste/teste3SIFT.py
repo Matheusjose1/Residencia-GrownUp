@@ -104,12 +104,12 @@ def salvar_csv(resultados, arquivo_csv="resultados.csv"):
         writer = csv.DictWriter(file, fieldnames=campos)
         writer.writeheader()
         writer.writerows(resultados)
-    print(f"\n✅ CSV salvo como: {arquivo_csv}")
+    print(f"\nArquivo CSV salvo como: {arquivo_csv}")
 
 if __name__ == "__main__":
     pasta_imagens = "imagens"
     algoritmo = 'sift'  # escolha: 'orb' ou 'sift'
 
-    print(f"\n🔎 Iniciando comparações com algoritmo: {algoritmo.upper()}")
+    print(f"\nComparando imagens de cadastro com operação: {algoritmo.upper()}")
     resultados = processar_imagens(pasta_imagens, algoritmo=algoritmo)
     salvar_csv(resultados)

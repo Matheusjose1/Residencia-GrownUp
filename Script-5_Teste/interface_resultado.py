@@ -28,7 +28,7 @@ def comparar(img1_path, img2_path, detector, matcher, filtro_lowe=0.75):
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 4.0)
         matches_mask = mask.ravel().tolist() if mask is not None else None
         consistentes = sum(matches_mask) if matches_mask else 0
-        similaridade = consistentes / max(len(kp1), len(kp2)) * 100
+        similaridade = (consistentes / ((len(kp1) + len(kp2)) / 2)) * 100
     else:
         similaridade = 0
         matches_mask = None
