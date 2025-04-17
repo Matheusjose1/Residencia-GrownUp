@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
@@ -34,9 +34,16 @@ def detectar_objetos(imagem_path, nome_saida):
         output_path = os.path.join("output", f"processed_{nome_saida}")
         cv2.imwrite(output_path, imagem)
 
-    return objetos, f"output/processed_{nome_saida}"
+    return objetos, output_path
 
-# Função de similaridade (IoU)
+# Função escolher arquivo
+def escolher_arquivo(label):
+    filepath = filedialog.askopenfilename(filetypes=[("Imagens", "*.jpg *.png")])
+    if filepath:
+        label.config(text=os.path.basename(filepath))
+    return filepath
+
+# Função de similaridade
 def calcular_similaridade(objetos1, objetos2, dist_threshold=100):
     correspondencias = 0
     usados = set()
@@ -60,71 +67,74 @@ def calcular_similaridade(objetos1, objetos2, dist_threshold=100):
 
     total = max(len(objetos1), len(objetos2))
     return (correspondencias / total) * 100 if total > 0 else 100
+
+# Função principal de comparação
+def comparar():
+    img1_path = file_1.get()
+    img2_path = file_2.get()
+    if not img1_path or not img2_path:
+        texto_resultado.set("Por favor, selecione ambas as imagens.")
+        return
+
+    objetos1, path1 = detectar_objetos(img1_path, "1.jpg")
+    objetos2, path2 = detectar_objetos(img2_path, "2.jpg")
+
+    similaridade = calcular_similaridade(objetos1, objetos2)
+    texto_resultado.set(f"Similaridade: {similaridade:.2f}%")
+
+    # Mostrar as duas imagens lado a lado
+    img1 = cv2.imread(path1)
+    img2 = cv2.imread(path2)
+
+    # Redimensionar para mesma altura (opcional, evita distorção)
+    altura = min(img1.shape[0], img2.shape[0])
+    img1_resized = cv2.resize(img1, (int(img1.shape[1] * altura / img1.shape[0]), altura))
+    img2_resized = cv2.resize(img2, (int(img2.shape[1] * altura / img2.shape[0]), altura))
+
+    concatenada = cv2.hconcat([img1_resized, img2_resized])
+    imagem_rgb = cv2.cvtColor(concatenada, cv2.COLOR_BGR2RGB)
+    imagem_pil = Image.fromarray(imagem_rgb)
+    imagem_pil.thumbnail((850, 500))
+    imagem_tk = ImageTk.PhotoImage(imagem_pil)
+
+    imagem_resultado.configure(image=imagem_tk)
+    imagem_resultado.image = imagem_tk
+
 # GUI
-class App:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Comparador de Imagens com YOLO")
-        self.root.geometry("1000x600")
-
-        self.img1_path = None
-        self.img2_path = None
-
-        self.label_info = tk.Label(root, text="Selecione duas imagens para comparar", font=("Arial", 14))
-        self.label_info.pack(pady=10)
-
-        self.btn1 = tk.Button(root, text="Selecionar Imagem 1", command=self.load_img1)
-        self.btn1.pack()
-
-        self.btn2 = tk.Button(root, text="Selecionar Imagem 2", command=self.load_img2)
-        self.btn2.pack()
-
-        self.compare_btn = tk.Button(root, text="Comparar Imagens", command=self.comparar, state=tk.DISABLED)
-        self.compare_btn.pack(pady=10)
-
-        self.canvas = tk.Canvas(root, width=960, height=360)
-        self.canvas.pack()
-
-        self.result_label = tk.Label(root, text="", font=("Arial", 14))
-        self.result_label.pack(pady=10)
-
-    def load_img1(self):
-        path = filedialog.askopenfilename()
-        if path:
-            self.img1_path = path
-            self.check_ready()
-
-    def load_img2(self):
-        path = filedialog.askopenfilename()
-        if path:
-            self.img2_path = path
-            self.check_ready()
-
-    def check_ready(self):
-        if self.img1_path and self.img2_path:
-            self.compare_btn.config(state=tk.NORMAL)
-
-    def comparar(self):
-        objetos1, out1 = detectar_objetos(self.img1_path, os.path.basename(self.img1_path))
-        objetos2, out2 = detectar_objetos(self.img2_path, os.path.basename(self.img2_path))
-        similaridade = calcular_similaridade(objetos1, objetos2)
-
-        # Mostrar imagens
-        img1 = Image.open(out1).resize((480, 360))
-        img2 = Image.open(out2).resize((480, 360))
-        img1_tk = ImageTk.PhotoImage(img1)
-        img2_tk = ImageTk.PhotoImage(img2)
-
-        self.canvas.delete("all")
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=img1_tk)
-        self.canvas.create_image(480, 0, anchor=tk.NW, image=img2_tk)
-
-        self.canvas.image1 = img1_tk
-        self.canvas.image2 = img2_tk
-
-        self.result_label.config(text=f"Similaridade: {similaridade:.2f}%")
-
-# Rodar app
 root = tk.Tk()
-app = App(root)
+root.title("Comparador de Imagens com YOLO")
+root.geometry("950x700")
+
+frame = tk.Frame(root)
+frame.pack(pady=20)
+
+file_1 = tk.StringVar()
+file_2 = tk.StringVar()
+algoritmo_selecionado = tk.StringVar(value="YOLO")
+texto_resultado = tk.StringVar()
+rotulo_real = tk.BooleanVar(value=False)
+
+# Escolha de imagens
+label_img1 = tk.Label(frame, text="Nenhuma imagem")
+label_img1.grid(row=0, column=1, padx=5)
+tk.Button(frame, text="Selecionar imagem 1", command=lambda:
+          file_1.set(escolher_arquivo(label_img1))).grid(row=0, column=0, padx=5, pady=5)
+
+label_img2 = tk.Label(frame, text="Nenhuma imagem")
+label_img2.grid(row=1, column=1, padx=5)
+tk.Button(frame, text="Selecionar imagem 2", command=lambda:
+          file_2.set(escolher_arquivo(label_img2))).grid(row=1, column=0, padx=5, pady=5)
+
+# Escolha do algoritmo (placeholder para expansão futura)
+tk.Label(frame, text="Algoritmo:").grid(row=2, column=0, pady=10)
+ttk.Combobox(frame, textvariable=algoritmo_selecionado, values=["YOLO"], state="readonly").grid(row=2, column=1)
+
+# Botão de comparar
+tk.Button(frame, text="Comparar Imagens", command=comparar, bg="green", fg="white").grid(row=4, columnspan=2, pady=10)
+
+# Resultado
+tk.Label(root, textvariable=texto_resultado, font=("Arial", 14)).pack(pady=10)
+imagem_resultado = tk.Label(root)
+imagem_resultado.pack()
+
 root.mainloop()

@@ -18,3 +18,5 @@ PAP-5156 Cad.jpg,PAP-5156 Op.jpg,SIFT,3.35,Falso Negativo (FN),resultado_PAP-515
 PAP-5156 Cad.jpg,PAP-5156 Op.jpg,ORB,5.9,Falso Negativo (FN),resultado_PAP-5156 Cad.jpg_PAP-5156 Op.jpg.jpg
 PAP-0005 Cad.jpg,PAP-0005 Op.jpg,SIFT,1.25,Verdadeiro Negativo (TN),resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg
 PAP-5156 Cad.jpg,PAP-5156 Op.jpg,SIFT,3.35,Verdadeiro Negativo (TN),resultado_PAP-5156 Cad.jpg_PAP-5156 Op.jpg.jpg
+PAP-0005 Cad.jpg,PAP-0005 Op.jpg,SIFT,1.25,Verdadeiro Negativo (TN),resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg
+PAP-0005 Cad.jpg,PAP-0005 Op.jpg,ORB,0.6,Verdadeiro Negativo (TN),resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg
