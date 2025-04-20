@@ -8,6 +8,7 @@ import csv
 import math
 from ultralytics import YOLO
 
+#Porcentagem mínima para verdadeiro positivo
 THRESHOLD = 70
 model_yolo = YOLO("yolov8n.pt")
 os.makedirs("output", exist_ok=True)

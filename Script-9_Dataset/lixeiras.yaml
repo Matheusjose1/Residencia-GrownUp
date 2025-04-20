@@ -1,0 +1,6 @@
+path: C:/dataset  # diretório onde está a pasta images/ e labels/
+train: images/train
+val: images/val
+
+names:
+  0: lixeira
