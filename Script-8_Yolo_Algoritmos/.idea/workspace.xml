@@ -5,14 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2a876cdc-5f5c-4f9c-9c4e-3b8c4ac91e66" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../Script-7_Yolo_only/output/processed_1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-7_Yolo_only/output/processed_1.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Script-7_Yolo_only/output/processed_2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-7_Yolo_only/output/processed_2.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/processed_1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/output/processed_1.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/processed_2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/output/processed_2.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resultado_comparacao.csv" beforeDir="false" afterPath="$PROJECT_DIR$/resultado_comparacao.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Script-9_Dataset/comparador.interface.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Script-9_Dataset/comparador.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0005 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0005 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0026 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0026 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0030 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0030 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0031 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0031 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0072 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0072 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0080 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0080 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-01084 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-01084 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-01086 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-01086 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0166 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-0166 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-5156 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/Imagens/PAP-5156 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/images.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-9_Dataset/images.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/lixeiras.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Script-9_Dataset/lixeiras.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Dataset/test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Script-9_Yolo11/.idea/workspace.xml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

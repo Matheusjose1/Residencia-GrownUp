@@ -1,4 +1,4 @@
-path: C:/dataset  # diretório onde está a pasta images/ e labels/
+path: C:\Users\mathe\Documents\Estudos\Residencia-GrownUp\Script-9_Dataset\dataset
 train: images/train
 val: images/val
 
