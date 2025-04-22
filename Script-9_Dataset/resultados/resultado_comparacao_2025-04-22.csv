@@ -1,0 +1,6 @@
+imagem_1,imagem_2,algoritmo,similaridade_%,classificacao,contexto_img1,contexto_img2,resultado_path
+PAP-0030 Op.jpg,PAP-0026 Cad.jpg,YOLO,73.33,Verdadeiro Positivo (TP),"car, car, person, person, person","car, fire hydrant",resultado_PAP-0030 Op.jpg_PAP-0026 Cad.jpg.jpg
+6f7d4ff6-2aa2-447b-930f-f4f2f9685ad9,PAP-0026 Cad.jpg,PAP-0072 Cad.jpg,SIFT,10.12,Verdadeiro Negativo (TN),"car, fire hydrant","parking meter, car, car, car, car, car, car, car, car, motorcycle, car, car, car",resultado_PAP-0026 Cad.jpg_PAP-0072 Cad.jpg.jpg
+8496f082-eea8-4dcd-aa4d-a390f5836b01,PAP-0026 Cad.jpg,PAP-0072 Cad.jpg,YOLO,10.0,Verdadeiro Negativo (TN),"car, fire hydrant","parking meter, car, car, car, car, car, car, car, car, motorcycle, car, car, car",resultado_PAP-0026 Cad.jpg_PAP-0072 Cad.jpg.jpg
+c3890f4f-75e7-491b-9d28-649637d5bff1,PAP-0072 Cad.jpg,PAP-0026 Cad.jpg,YOLO,10.0,Verdadeiro Negativo (TN),"parking meter, car, car, car, car, car, car, car, car, motorcycle, car, car, car","car, fire hydrant",resultado_PAP-0072 Cad.jpg_PAP-0026 Cad.jpg.jpg
+248dae81-42ea-4caa-8d13-199da5b33a5e,PAP-0030 Op.jpg,PAP-0072 Op.jpg,YOLO,80.0,Verdadeiro Positivo (TP),"car, car, person, person, person","car, car, car",imagens_processadas\resultado_PAP-0030 Op.jpg_PAP-0072 Op.jpg.jpg
