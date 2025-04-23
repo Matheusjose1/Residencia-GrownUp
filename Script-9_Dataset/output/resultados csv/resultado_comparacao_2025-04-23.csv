@@ -1,0 +1,2 @@
+id,imagem_1,imagem_2,algoritmo,similaridade_%,classificacao,contexto_img1,contexto_img2,resultado_path
+caa2ba9c-1a9c-4cf8-814f-2788a0eff83a,PAP-0005 Cad.jpg,PAP-0072 Cad.jpg,YOLO,0.0,Verdadeiro Negativo (TN),"person, bench, fire hydrant, bench","parking meter, car, car, car, car, car, car, car, car, motorcycle, car, car, car",C:\Users\aluno\Documents\GitHub\Residencia-GrownUp\Script-9_Dataset\output\imagens processadas\resultado_PAP-0005 Cad.jpg_PAP-0072 Cad.jpg.jpg
