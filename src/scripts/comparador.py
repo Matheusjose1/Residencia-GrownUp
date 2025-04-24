@@ -16,7 +16,7 @@ PESO_LIXEIRA = 0.6 # Métrica da identificação da lixeira
 PESO_CONTEXTO = 0.4 # Métrica da identificação do contexto da lixeira
 
 # Modelos YOLO
-model_yolo = YOLO("C:/Users/mathe/Documents/Estudos/Residencia-GrownUp/src/treinamentos/yolo_lixeiras7/weights/best.pt") #Modelo específico para lixeiras
+model_yolo = YOLO("../treinamentos/yolo_lixeiras7/weights/best.pt") #Modelo específico para lixeiras
 modelo_geral = YOLO("yolov8n.pt") #Modelo pré treinado da YOLO
 
 
