@@ -1,7 +1,121 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="c3378a8f-73b1-4690-94bd-7ccb27c43abb" name="Changes" comment="" />
+    <list default="true" id="c3378a8f-73b1-4690-94bd-7ccb27c43abb" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/Residencia-GrownUp.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Residencia-GrownUp.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/.idea/Script-9_Yolo11.iml" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/Script-9_Yolo11.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0005 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0005 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0026 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0026 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0030 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0030 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0031 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0031 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0072 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0072 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0080 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0080 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-01084 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-01084 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-01086 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-01086 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-0166 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0166 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Cad/PAP-5156 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-5156 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0005 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0005 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0026 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0026 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0030 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0030 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0031 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0031 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0072 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0072 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0080 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0080 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-01084 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-01084 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-01086 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-01086 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-0166 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0166 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/Imagens/Op/PAP-5156 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-5156 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0005 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0005 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0026 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0026 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0030 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0030 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0031 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0031 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0072 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0072 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0080 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0080 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-01084 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-01084 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-01086 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-01086 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-0166 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0166 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/train/PAP-5156 Cad.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-5156 Cad.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0005 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0005 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0026 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0026 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0030 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0030 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0031 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0031 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0072 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0072 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0080 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0080 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-01084 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-01084 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-01086 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-01086 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-0166 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0166 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/images/val/PAP-5156 Op.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-5156 Op.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train.cache" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0005 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0005 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0026 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0026 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0030 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0030 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0031 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0031 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0072 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0072 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0080 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0080 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-01084 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-01084 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-01086 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-01086 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-0166 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0166 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/PAP-5156 Cad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-5156 Cad.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/train/classes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/train/classes.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val.cache" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0005 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0005 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0026 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0026 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0030 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0030 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0031 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0031 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0072 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0072 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0080 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0080 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-01084 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-01084 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-01086 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-01086 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-0166 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0166 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/PAP-5156 Op.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-5156 Op.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/dataset/labels/val/classes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/dataset/labels/val/classes.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/data/lixeiras.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/lixeiras.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/models/yolov8n.pt" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/yolov8n.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/models/yolov8s.pt" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/yolov8s.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/output/imagens processadas/processed_1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/imagens processadas/processed_1.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/output/imagens processadas/processed_2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/imagens processadas/processed_2.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/output/imagens processadas/resultado_PAP-0005 Cad.jpg_PAP-0072 Cad.jpg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0005 Cad.jpg_PAP-0072 Cad.jpg.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/output/resultados csv/resultado_comparacao_2025-04-23.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/resultados csv/resultado_comparacao_2025-04-23.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/scripts/comparador.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/comparador.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/scripts/images.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/images.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/scripts/yolov8n.pt" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/yolov8n.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras2/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras2/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras3/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras3/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras4/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras4/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras5/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras5/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras6/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras6/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/F1_curve.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/F1_curve.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/PR_curve.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/PR_curve.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/P_curve.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/P_curve.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/R_curve.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/R_curve.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/args.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/args.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/confusion_matrix.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/confusion_matrix.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/confusion_matrix_normalized.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/confusion_matrix_normalized.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/labels.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/labels.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/labels_correlogram.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/labels_correlogram.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/results.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/results.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/results.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/results.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/train_batch0.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch0.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/train_batch1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch1.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/train_batch2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch2.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/train_batch80.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch80.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/train_batch81.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch81.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/train_batch82.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch82.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/val_batch0_labels.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/val_batch0_labels.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/val_batch0_pred.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/val_batch0_pred.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/weights/best.pt" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/weights/best.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/treinamentos/yolo_lixeiras7/weights/last.pt" beforeDir="false" afterPath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/weights/last.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script-9_Dataset/yolov3.cfg.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/yolov3.cfg.txt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -10,9 +124,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
   <component name="ProjectId" id="2vVwkNstciR7pvkOZR1JfkoS2Wf" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -20,11 +134,42 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.comparador.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main"
+    "git-widget-placeholder": "main",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="comparador" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Residencia-GrownUp" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/scripts" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/scripts/comparador.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.comparador" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

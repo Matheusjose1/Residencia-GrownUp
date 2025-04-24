@@ -1,0 +1,6 @@
+path: C:\Users\mathe\Documents\Estudos\Residencia-GrownUp\Script-9_Dataset\dataset
+train: images/train
+val: images/val
+
+names:
+  0: lixeira
