@@ -40,7 +40,7 @@ def salvar_csv(resultado_dict): # Gera tabela csv
         "imagem_1",
         "imagem_2",
         "algoritmo",
-        "similaridade_%", 
+        "similaridade_%",
         "classificacao",
         "contexto_img1",
         "contexto_img2",
@@ -156,22 +156,66 @@ def iniciar_comparacao():
         messagebox.showwarning("Erro", "Selecione duas imagens.")
         return
 
-    id_comparacao = str(uuid.uuid4())  # Gera ID único para esta execução
+    id_comparacao = str(uuid.uuid4())  # ID único
+
+    # Extrai o ID de 4 dígitos do nome da imagem
+    def extrair_id(nome):
+        numeros = ''.join(filter(str.isdigit, nome))
+        return numeros[-4:] if len(numeros) >= 4 else None
+
+    id1 = extrair_id(os.path.basename(img1_path))
+    id2 = extrair_id(os.path.basename(img2_path))
+
+    ids_iguais = id1 == id2 and id1 is not None and id2 is not None
+
+    if not ids_iguais:
+        messagebox.showinfo("Aviso", "As imagens não compartilham o mesmo ID.")
 
     if algoritmo == "YOLO":
         objetos1, path1 = detectar_objetos_yolo(img1_path, "1.jpg")
         objetos2, path2 = detectar_objetos_yolo(img2_path, "2.jpg")
         similaridade_lixeiras = calcular_similaridade_yolo(objetos1, objetos2)
 
-        contexto1 = detectar_contexto_geral(img1_path)
-        contexto2 = detectar_contexto_geral(img2_path)
-        intersecao = set(contexto1).intersection(set(contexto2))
-        union = set(contexto1).union(set(contexto2))
-        similaridade_contexto = (len(intersecao) / len(union)) * 100 if union else 100
+        # Aplicar ORB para contexto
+        def orb_contexto(im1, im2):
+            # Leitura e pré-processamento
+            img1 = cv2.imread(im1)
+            img2 = cv2.imread(im2)
+            gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+            gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+            # Aumentar contraste com equalização de histograma
+            gray1 = cv2.equalizeHist(gray1)
+            gray2 = cv2.equalizeHist(gray2)
 
-        similaridade = (similaridade_lixeiras * PESO_LIXEIRA) + (similaridade_contexto * PESO_CONTEXTO)
-        classificacao = "Verdadeiro Positivo (TP)" if similaridade >= THRESHOLD else "Verdadeiro Negativo (TN)"
+            orb = cv2.ORB_create(nfeatures=2000)
+            kp1, des1 = orb.detectAndCompute(gray1, None)
+            kp2, des2 = orb.detectAndCompute(gray2, None)
 
+            if des1 is None or des2 is None:
+                return 0
+
+            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+            matches = bf.match(des1, des2)
+            matches = sorted(matches, key=lambda x: x.distance)
+            similares = [m for m in matches if m.distance < 60]
+            return (len(similares) / max(len(kp1), len(kp2))) * 100 if kp1 and kp2 else 0
+
+        similaridade_contexto = orb_contexto(img1_path, img2_path)
+
+        # Ajustar peso baseado no ID
+        peso_id = 1.0 if ids_iguais else 0.85
+        similaridade = peso_id * ((similaridade_lixeiras * PESO_LIXEIRA) + (similaridade_contexto * PESO_CONTEXTO))
+
+        if similaridade >= THRESHOLD and ids_iguais:
+            classificacao = "Verdadeiro Positivo (VP)"
+        elif similaridade >= THRESHOLD and not ids_iguais:
+            classificacao = "Falso Positivo (FP)"
+        elif similaridade < THRESHOLD and ids_iguais:
+            classificacao = "Falso Negativo (FN)"
+        else:
+            classificacao = "Verdadeiro Negativo (VN)"
+
+        # Combina visualmente
         img1 = cv2.imread(path1)
         img2 = cv2.imread(path2)
         altura = min(img1.shape[0], img2.shape[0])
@@ -190,11 +234,18 @@ def iniciar_comparacao():
         similaridade_contexto = (len(intersecao) / len(union)) * 100 if union else 100
         similaridade_lixeiras = similaridade
         similaridade = (similaridade_lixeiras * PESO_LIXEIRA) + (similaridade_contexto * PESO_CONTEXTO)
-        classificacao = "Verdadeiro Positivo (TP)" if similaridade >= THRESHOLD else "Verdadeiro Negativo (TN)"
+        if similaridade >= THRESHOLD and ids_iguais:
+            classificacao = "Verdadeiro Positivo (VP)"
+        elif similaridade >= THRESHOLD and not ids_iguais:
+            classificacao = "Falso Positivo (FP)"
+        elif similaridade < THRESHOLD and ids_iguais:
+            classificacao = "Falso Negativo (FN)"
+        else:
+            classificacao = "Verdadeiro Negativo (VN)"
 
     texto_resultado.set(f"Similaridade Total: {similaridade:.2f}%\nResultado: {classificacao}")
-    barra_lixeira['value'] = similaridade_lixeiras
-    barra_contexto['value'] = similaridade_contexto
+    barra_lixeira.set(similaridade_lixeiras)
+    barra_contexto.set(similaridade_contexto)
 
     resultado_filename = f"resultado_{os.path.basename(img1_path)}_{os.path.basename(img2_path)}.jpg"
     resultado_path = os.path.join(pasta_imagens, resultado_filename)
@@ -212,10 +263,90 @@ def iniciar_comparacao():
         "algoritmo": algoritmo,
         "similaridade_%": round(similaridade, 2),
         "classificacao": classificacao,
-        "contexto_img1": ", ".join(contexto1),
-        "contexto_img2": ", ".join(contexto2),
+        "contexto_img1": "ORB detalhado",
+        "contexto_img2": "ORB detalhado",
         "resultado_path": resultado_path
     })
+
+def atualizar_resultado():
+    similaridade_lixeiras = barra_lixeira.get()
+    similaridade_contexto = barra_contexto.get()
+
+    # Mesma lógica usada antes
+    img1_path = file_1.get()
+    img2_path = file_2.get()
+
+    def extrair_id(nome):
+        numeros = ''.join(filter(str.isdigit, nome))
+        return numeros[-4:] if len(numeros) >= 4 else None
+
+    id1 = extrair_id(os.path.basename(img1_path))
+    id2 = extrair_id(os.path.basename(img2_path))
+    ids_iguais = id1 == id2 and id1 is not None and id2 is not None
+
+    peso_id = 1.0 if ids_iguais else 0.85
+    similaridade = peso_id * ((similaridade_lixeiras * PESO_LIXEIRA) + (similaridade_contexto * PESO_CONTEXTO))
+
+    # Classificação dinâmica
+    if similaridade >= THRESHOLD and ids_iguais:
+        classificacao = "Verdadeiro Positivo (VP)"
+    elif similaridade >= THRESHOLD and not ids_iguais:
+        classificacao = "Falso Positivo (FP)"
+    elif similaridade < THRESHOLD and ids_iguais:
+        classificacao = "Falso Negativo (FN)"
+    else:
+        classificacao = "Verdadeiro Negativo (VN)"
+
+    texto_resultado.set(f"Similaridade Total: {similaridade:.2f}%\nResultado: {classificacao}")
+
+def salvar_correcao():
+    img1_path = file_1.get()
+    img2_path = file_2.get()
+    algoritmo = algoritmo_selecionado.get()
+
+    if not img1_path or not img2_path:
+        messagebox.showwarning("Erro", "Selecione duas imagens.")
+        return
+
+    similaridade_lixeiras = barra_lixeira.get()
+    similaridade_contexto = barra_contexto.get()
+
+    def extrair_id(nome):
+        numeros = ''.join(filter(str.isdigit, nome))
+        return numeros[-4:] if len(numeros) >= 4 else None
+
+    id1 = extrair_id(os.path.basename(img1_path))
+    id2 = extrair_id(os.path.basename(img2_path))
+    ids_iguais = id1 == id2 and id1 is not None and id2 is not None
+
+    peso_id = 1.0 if ids_iguais else 0.85
+    similaridade = peso_id * ((similaridade_lixeiras * PESO_LIXEIRA) + (similaridade_contexto * PESO_CONTEXTO))
+
+    if similaridade >= THRESHOLD and ids_iguais:
+        classificacao = "Verdadeiro Positivo (VP)"
+    elif similaridade >= THRESHOLD and not ids_iguais:
+        classificacao = "Falso Positivo (FP)"
+    elif similaridade < THRESHOLD and ids_iguais:
+        classificacao = "Falso Negativo (FN)"
+    else:
+        classificacao = "Verdadeiro Negativo (VN)"
+
+    resultado_filename = f"resultado_{os.path.basename(img1_path)}_{os.path.basename(img2_path)}.jpg"
+    resultado_path = os.path.join(pasta_imagens, resultado_filename)
+
+    salvar_csv({
+        "id": f"correcao-{str(uuid.uuid4())[:8]}",
+        "imagem_1": os.path.basename(img1_path),
+        "imagem_2": os.path.basename(img2_path),
+        "algoritmo": f"{algoritmo} (CORRIGIDO)",
+        "similaridade_%": round(similaridade, 2),
+        "classificacao": classificacao,
+        "contexto_img1": f"{barra_contexto.get()}% (ajustado)",
+        "contexto_img2": f"{barra_contexto.get()}% (ajustado)",
+        "resultado_path": resultado_path
+    })
+
+    messagebox.showinfo("Correção Salva", "A correção foi salva com sucesso no CSV!")
 
 # Interface gráfica
 root = tk.Tk()
@@ -246,12 +377,14 @@ tk.Button(frame, text="Comparar Imagens", command=iniciar_comparacao, bg="green"
 tk.Label(root, textvariable=texto_resultado, font=("Arial", 14)).pack(pady=10)
 
 tk.Label(root, text="Similaridade de Lixeiras").pack()
-barra_lixeira = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate", maximum=100)
+barra_lixeira = tk.Scale(root, from_=0, to=100, orient='horizontal', length=400, label="Similaridade de Lixeiras", command=lambda val: atualizar_resultado())
 barra_lixeira.pack(pady=5)
 
 tk.Label(root, text="Similaridade de Contexto").pack()
-barra_contexto = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate", maximum=100)
+barra_contexto = tk.Scale(root, from_=0, to=100, orient='horizontal', length=400, label="Similaridade de Contexto", command=lambda val: atualizar_resultado())
 barra_contexto.pack(pady=5)
+
+tk.Button(root, text="Salvar Correção", bg="blue", fg="white", command=salvar_correcao).pack(pady=10)
 
 imagem_resultado = tk.Label(root)
 imagem_resultado.pack()
