@@ -10,13 +10,13 @@ from datetime import datetime
 from ultralytics import YOLO
 import uuid
 
-# Configurações
+# Configurações globais
 THRESHOLD = 70 #Limite mínimo para verdadeiro positivo
 PESO_LIXEIRA = 0.6 # Métrica da identificação da lixeira
 PESO_CONTEXTO = 0.4 # Métrica da identificação do contexto da lixeira
 
 # Modelos YOLO
-model_yolo = YOLO("C:/Users/mathe/Documents/Estudos/Residencia-GrownUp/src/treinamentos/yolo_lixeiras7/weights/best.pt") #Modelo específico para lixeiras
+model_yolo = YOLO("../treinamentos/yolo_lixeiras7/weights/best.pt") #Modelo específico para lixeiras
 modelo_geral = YOLO("yolov8n.pt") #Modelo pré treinado da YOLO
 
 
@@ -30,11 +30,11 @@ def salvar_csv(resultado_dict): # Gera tabela csv
     pasta_csv = os.path.join(pasta_base, "resultados csv")
     os.makedirs(pasta_csv, exist_ok=True)
 
-    data_atual = datetime.now().strftime("%Y-%m-%d")
+    data_atual = datetime.now().strftime("%d-%m-%Y")
     nome_arquivo = f"resultado_comparacao_{data_atual}.csv"
     caminho_arquivo = os.path.join(pasta_csv, nome_arquivo)
 
-    # Define a ordem fixa dos campos (inclui o campo 'id')
+    # Define a ordem fixa dos campos
     fieldnames = [
         "id",
         "imagem_1",
@@ -156,7 +156,7 @@ def iniciar_comparacao():
         messagebox.showwarning("Erro", "Selecione duas imagens.")
         return
 
-    id_comparacao = str(uuid.uuid4())  # ID único
+    id_comparacao = str(uuid.uuid4())  # ID único universal
 
     # Extrai o ID de 4 dígitos do nome da imagem
     def extrair_id(nome):
@@ -346,7 +346,7 @@ def salvar_correcao():
         "resultado_path": resultado_path
     })
 
-    messagebox.showinfo("Correção Salva", "A correção foi salva com sucesso no CSV!")
+    messagebox.showinfo("Correção Salva", "A correção salva")
 
 # Interface gráfica
 root = tk.Tk()

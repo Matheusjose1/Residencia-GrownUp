@@ -6,7 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="c3378a8f-73b1-4690-94bd-7ccb27c43abb" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/lixeiras.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/lixeiras.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/processed_1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/imagens processadas/processed_1.jpg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/processed_2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/imagens processadas/processed_2.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0005 Cad.jpg_PAP-0005 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0005 Cad.jpg_PAP-0072 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0026 Cad.jpg_PAP-0026 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0026 Op.jpg_PAP-0005 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0031 Cad.jpg_PAP-0031 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0031 Cad.jpg_PAP-0031 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0080 Cad.jpg_PAP-0080 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0166 Cad.jpg_PAP-0166 Op.jpg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0166 Cad.jpg_PAP-0166 Op.jpg.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/resultados csv/resultado_comparacao_2025-04-23.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/resultados csv/resultado_comparacao_2025-04-24.csv" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/scripts/comparador.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/comparador.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
