@@ -1,0 +1,9 @@
+path: C:/Users/mathe/Documents/Estudos/Redes Neurais/Treinamento02
+train: C:\Users\mathe\Documents\Estudos\Redes Neurais\Treinamento02\dataset\images\train
+val: C:\Users\mathe\Documents\Estudos\Redes Neurais\Treinamento02\dataset\images\val
+
+nc: 3
+names:
+  0: lixo_domiciliar
+  1: lixo_volumoso
+  2: lixo_misto
