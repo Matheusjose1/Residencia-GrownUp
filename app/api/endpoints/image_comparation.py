@@ -1,30 +1,38 @@
 import os
 import uuid
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from typing import List
 from datetime import datetime
+from sqlalchemy.orm import Session # Importa a sessão do SQLAlchemy
 
 from app.models.image_processing import process_single_image_yolo
 from app.core.utils import save_detection_to_xlsx, extract_id_from_filename
 from app.core.config import PROCESSED_IMAGES_DIR, XLSX_RESULTS_DIR
+from app.core.database import get_db # Importa a dependência de DB
+from app.models.detection_result import DetectionResult # Importa o modelo do DB
 
 router = APIRouter()
 
 
 @router.post("/process_images/")
-async def process_images(files: List[UploadFile] = File(...)) -> JSONResponse:
+async def process_images(
+        files: List[UploadFile] = File(...),
+        db: Session = Depends(get_db)  # Injeta a sessão do banco de dados aqui
+) -> JSONResponse:
     """
     Endpoint para processar uma ou múltiplas imagens usando o modelo YOLO.
-    Recebe um ou mais arquivos de imagem e retorna um JSON com o resumo das detecções
-    e um link para o arquivo XLSX de resultados, contendo ID, Tipo e Acurácia.
+    Recebe um ou mais arquivos de imagem, salva os resultados no DB,
+    e retorna um JSON com o resumo das detecções e um link para o arquivo XLSX de resultados.
     """
     if not files:
         raise HTTPException(status_code=400, detail="Nenhum arquivo enviado.")
 
     temp_image_paths = []
-    # Lista para coletar TODOS os itens de detecção individuais para o XLSX
-    all_flat_detections = []
+    all_flat_detections_for_xlsx = []  # Para coletar dados para o XLSX
+
+    # Lista para coletar os dados que serão persistidos no DB, já no formato do modelo
+    detections_to_save_to_db: List[DetectionResult] = []
 
     try:
         for image_file in files:
@@ -32,46 +40,66 @@ async def process_images(files: List[UploadFile] = File(...)) -> JSONResponse:
                 raise HTTPException(status_code=400,
                                     detail=f"Apenas arquivos JPG ou PNG são permitidos. Recebido: {image_file.filename}")
 
-            # Salva a imagem temporariamente
             temp_path = os.path.join("/tmp", image_file.filename)
             os.makedirs("/tmp", exist_ok=True)
             with open(temp_path, "wb") as f:
                 f.write(await image_file.read())
             temp_image_paths.append(temp_path)
 
-            # Processa a imagem com YOLO
             detection_result = process_single_image_yolo(temp_path)
 
-            # Adiciona as detecções desta imagem à lista global para o XLSX
-            # Note que 'detection_result["detections"]' já está no formato {"image_id", "class", "confidence"}
-            all_flat_detections.extend(detection_result["detections"])
+            image_id = extract_id_from_filename(detection_result["image_name"]) or "N/A"
 
-            # Se não houver detecções, adiciona uma linha indicando isso no XLSX
-            if not detection_result["detections"]:
-                image_id = extract_id_from_filename(detection_result["image_name"]) or "N/A"
-                all_flat_detections.append({
+            if detection_result["detections"]:
+                for det in detection_result["detections"]:
+                    # Prepara dados para o XLSX
+                    all_flat_detections_for_xlsx.append({
+                        "image_id": image_id,
+                        "class": det["class"],
+                        "confidence": det["confidence"]
+                    })
+
+                    # Prepara dados para o banco de dados
+                    new_db_detection = DetectionResult(
+                        image_id=image_id,
+                        image_filename=detection_result["image_name"],
+                        detected_class=det["class"],
+                        confidence=det["confidence"],
+                        processed_image_path=detection_result["processed_image_path"],
+                        timestamp=datetime.utcnow()
+                    )
+                    detections_to_save_to_db.append(new_db_detection)
+            else:
+                # Caso não haja detecções, ainda adicionar uma linha para o XLSX e DB
+                all_flat_detections_for_xlsx.append({
                     "image_id": image_id,
                     "class": "Nenhuma detecção",
                     "confidence": 0.0
                 })
+                new_db_detection = DetectionResult(
+                    image_id=image_id,
+                    image_filename=detection_result["image_name"],
+                    detected_class="Nenhuma detecção",
+                    confidence=0.0,
+                    processed_image_path=detection_result["processed_image_path"],
+                    timestamp=datetime.utcnow()
+                )
+                detections_to_save_to_db.append(new_db_detection)
 
-        # Gerar o nome do arquivo XLSX baseado na data/hora
+        # Salva todas as detecções no banco de dados
+        db.add_all(detections_to_save_to_db)
+        db.commit()
+        for det in detections_to_save_to_db:  # Para ter certeza de que o ID do DB é preenchido
+            db.refresh(det)
+
+        # Gerar o nome do arquivo XLSX e salvar
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         xlsx_filename = f"detections_report_{timestamp}.xlsx"
-
-        # Salva todos os dados de detecção no XLSX
-        xlsx_file_path = save_detection_to_xlsx(all_flat_detections, xlsx_filename)
+        xlsx_file_path = save_detection_to_xlsx(all_flat_detections_for_xlsx, xlsx_filename)
 
         # Prepara o resumo para a resposta JSON (para o frontend)
         response_summary = []
-        for det_data in all_flat_detections:
-            # Para o resumo, vamos agrupar por imagem novamente se necessário
-            # Ou retornar uma lista mais simples se a granularidade por detecção for ok
-            # Para manter um resumo similar ao anterior:
-            image_name = det_data["image_id"]  # Usando o ID como nome para o resumo
-
-            # Para evitar duplicatas no resumo se uma imagem tiver múltiplas detecções
-            # Isso é mais complexo, mas para um resumo simples, podemos listar todas as detecções
+        for det_data in all_flat_detections_for_xlsx:  # Usa os dados preparados para XLSX
             response_summary.append({
                 "id": det_data["image_id"],
                 "tipo": det_data["class"],
@@ -80,19 +108,24 @@ async def process_images(files: List[UploadFile] = File(...)) -> JSONResponse:
 
         return JSONResponse(content={
             "status": "success",
-            "message": "Imagens processadas com sucesso. Relatório XLSX gerado.",
-            "detections_summary": response_summary,  # Agora reflete a estrutura do XLSX
+            "message": "Imagens processadas e resultados salvos no DB e XLSX gerado.",
+            "detections_summary": response_summary,
             "xlsx_report_url": f"/reports/{os.path.basename(xlsx_file_path)}"
         })
 
+
     except Exception as e:
+
+        db.rollback()  # Em caso de erro, desfaz qualquer alteração no DB
+
         raise HTTPException(status_code=500, detail=f"Erro interno do servidor: {e}")
+
     finally:
-        # Limpa as imagens temporárias
+
         for path in temp_image_paths:
+
             if os.path.exists(path):
                 os.remove(path)
-
 
 @router.get("/processed_images/{image_name}")
 async def get_processed_image(image_name: str):

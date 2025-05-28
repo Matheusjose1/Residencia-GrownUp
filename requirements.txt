@@ -5,3 +5,5 @@ numpy==1.26.4
 opencv-python==4.9.0.80
 ultralytics==8.2.20
 openpyxl==3.1.2
+SQLAlchemy==2.0.41
+python-multipart==0.0.20
