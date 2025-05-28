@@ -4,11 +4,151 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c3378a8f-73b1-4690-94bd-7ccb27c43abb" name="Changes" comment="" />
+    <list default="true" id="c3378a8f-73b1-4690-94bd-7ccb27c43abb" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/endpoints/image_comparation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/core/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/core/config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/core/utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/image_processing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/Script-9_Yolo11.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0005 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0026 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0030 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0031 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0072 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0080 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-01084 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-01086 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-0166 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Cad/PAP-5156 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0005 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0026 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0030 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0031 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0072 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0080 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-01084 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-01086 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-0166 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/Imagens/Op/PAP-5156 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0005 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0026 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0030 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0031 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0072 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0080 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-01084 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-01086 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-0166 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/train/PAP-5156 Cad.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0005 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0026 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0030 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0031 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0072 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0080 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-01084 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-01086 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-0166 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/images/val/PAP-5156 Op.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0005 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0026 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0030 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0031 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0072 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0080 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-01084 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-01086 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-0166 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/PAP-5156 Cad.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/train/classes.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0005 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0026 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0030 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0031 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0072 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0080 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-01084 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-01086 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-0166 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/PAP-5156 Op.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/dataset/labels/val/classes.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/lixeiras.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/yolov8n.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/yolov8s.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/processed_1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/processed_2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0005 Cad.jpg_PAP-0005 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0005 Cad.jpg_PAP-0031 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0005 Op.jpg_PAP-0005 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0030 Cad.jpg_PAP-0030 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0031 Op.jpg_PAP-0031 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0072 Cad.jpg_PAP-0072 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0080 Op.jpg_PAP-0080 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-01084 Op.jpg_PAP-01084 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-01086 Cad.jpg_PAP-01086 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0166 Cad.jpg_PAP-0166 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-0166 Cad.jpg_PAP-0166 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-5156 Cad.jpg_PAP-5156 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-5156 Cad.jpg_PAP-5156 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-5156 Op.jpg_PAP-5156 Cad.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/imagens processadas/resultado_PAP-5156 Op.jpg_PAP-5156 Op.jpg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/output/resultados csv/resultado_comparacao_25-04-2025.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/comparador.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/images.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/models/yolov8s.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/yolov8n.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras2/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras3/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras4/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras5/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras6/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/F1_curve.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/PR_curve.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/P_curve.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/R_curve.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/args.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/confusion_matrix.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/confusion_matrix_normalized.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/labels.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/labels_correlogram.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/results.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/results.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch80.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch81.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/train_batch82.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/val_batch0_labels.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/val_batch0_pred.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/weights/best.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/treinamentos/yolo_lixeiras7/weights/last.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/yolov3.cfg.txt" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -17,21 +157,30 @@
   &quot;associatedIndex&quot;: 5
 }</component>
   <component name="ProjectId" id="2vVwkNstciR7pvkOZR1JfkoS2Wf" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.comparador.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/mathe/Documents/Estudos/Redes Neurais",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.comparador.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mathe/Documents/Estudos/Redes Neurais&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\mathe\Documents\Estudos\Residencia-GrownUp\app" />
+      <recent name="C:\Users\mathe\Documents\Estudos\Residencia-GrownUp\app\core" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="comparador" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Residencia-GrownUp" />
