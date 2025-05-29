@@ -12,11 +12,10 @@ XLSX_RESULTS_DIR = OUTPUT_DIR / "resultados_xlsx"
 
 # Garante que os diretórios existam
 PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-# CSV_RESULTS_DIR.mkdir(parents=True, exist_ok=True) # Removido
 XLSX_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Caminhos dos modelos YOLO
-YOLO_LIXEIRAS_MODEL_PATH = BASE_DIR / "treinamentos" / "yolo_lixeiras7" / "weights" / "best.pt"
+YOLO_LIXEIRAS_MODEL_PATH = BASE_DIR / "training" / "yolov11_residuos_custom2" / "weights" / "best.pt"
 YOLO_GENERAL_MODEL_PATH = None
 
 # Carregamento dos modelos
