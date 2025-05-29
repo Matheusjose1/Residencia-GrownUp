@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Espera - Análise de Imagem</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="logo.png" alt="TPF Logo">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link">PAINEL DE UPLOAD</a></li>
+                    <li><a href="#" class="nav-link active">PAINEL DE ESPERA</a></li>
+                    <li><a href="#" class="nav-link">PAINEL DE RESULTADO</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="processing-panel">
+                
+                <h2>A imagem está sendo processada</h2>
+                
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+                
+                <p class="processing-message">
+                    Nossa inteligência artificial está analisando seu conteúdo.<br>
+                    Isso pode levar alguns minutos.
+                </p>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text">Analisando a imagem...</div>
+                </div>
+                
+                <div class="info-box">
+                    <span class="info-icon">ℹ️</span>
+                    <p class="info-text">O processamento pode variar de acordo com a imagem. Por favor, não feche esta janela.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="api-integration.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
