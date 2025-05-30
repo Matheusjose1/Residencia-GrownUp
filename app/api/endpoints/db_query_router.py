@@ -52,10 +52,3 @@ async def read_detections_by_class(
     if not class_detections:
         raise HTTPException(status_code=404, detail=f"No detections found for class: {detected_class}")
     return class_detections
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()

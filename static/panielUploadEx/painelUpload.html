@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload e Análise de Imagens</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="logo.png" alt="TPF Logo">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link active">UPLOAD E ANÁLISE</a></li>
+                    <li><a href="#" class="nav-link">HISTÓRICO DE DETECÇÕES</a></li> <li><a href="#" class="nav-link">RELATÓRIOS</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="upload-panel"> <h2>Faça upload das imagens para análise</h2>
+                
+                <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+                    <input type="file" id="imageUpload" name="files" accept="image/jpeg, image/png" multiple required>
+                    <button type="submit" class="upload-button">Analisar Imagens</button>
+                </form>
+
+                <div id="processingStatus" class="processing-message" style="display: none;">
+                    Processando suas imagens... Aguarde.
+                </div>
+
+                <div class="progress-container" style="display: none;"> <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText"></div>
+                </div>
+
+                <div id="resultsDisplay" class="results-display" style="display: none;">
+                    <h3>Resultados da Análise:</h3>
+                    <ul id="detectionList">
+                        </ul>
+                    <div id="reportLinks">
+                        </div>
+                </div>
+                
+                <div class="info-box">
+                    <span class="info-icon">ℹ️</span>
+                    <p class="info-text">Selecione uma ou mais imagens JPG ou PNG para iniciar a análise. O tempo de processamento dependerá do número e tamanho das imagens.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="api-integration.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

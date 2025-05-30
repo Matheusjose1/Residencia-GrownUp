@@ -1,50 +1,36 @@
 # app/main.py
-import uvicorn
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
-from pathlib import Path
+from fastapi.responses import FileResponse
 
-# Importar seus routers/endpoints
-from app.api.endpoints import image_comparation
-from app.core.database import create_db_tables, get_db
+# Corrija o nome do arquivo de importação aqui!
+from app.api.endpoints import image_comparation # <--- DEVE SER image_comparation
+from app.api.endpoints import db_query_router
+from app.core.config import PROCESSED_IMAGES_DIR, XLSX_RESULTS_DIR
+from app.core.database import create_db_tables
 
-# Cria a aplicação FastAPI
 app = FastAPI(
-    title="Análise de Resíduos com IA",
-    description="API para upload, processamento e análise de imagens de resíduos utilizando YOLO.",
-    version="1.0.0",
+    title="API de Detecção de Lixo com YOLO",
+    description="API RESTful para detectar e classificar tipos de lixo em imagens usando modelos YOLO e exportar para XLSX. Incluindo persistência em DB.",
+    version="1.0.0"
 )
 
-# Caminho para o diretório 'static' (relativo à raiz do projeto onde main.py é executado)
-STATIC_DIR = Path("static")
-# Caminho para o diretório onde as imagens processadas serão salvas e servidas
-PROCESSED_IMAGES_DIR = Path("data/output/imagens_processadas")
+# Inclui os roteadores
+# E aqui você usa o roteador do arquivo correto
+app.include_router(image_comparation.router, prefix="/api", tags=["Image Processing"]) # <--- DEVE SER image_comparation.router
+app.include_router(db_query_router.router, prefix="/api", tags=["Database Queries"])
 
-# Certifica que os diretórios necessários existem
-STATIC_DIR.mkdir(parents=True, exist_ok=True)
-PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-
-# Monta o diretório 'static' para servir arquivos estáticos (CSS, JS, imagens do frontend)
-# A URL acessível será /static/<nome_do_arquivo>
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
-# Monta o diretório de imagens processadas para serem acessíveis via URL
-# A URL acessível será /processed_images/<nome_do_arquivo>
+# Monta diretórios estáticos
 app.mount("/processed_images", StaticFiles(directory=PROCESSED_IMAGES_DIR), name="processed_images")
+app.mount("/reports", StaticFiles(directory=XLSX_RESULTS_DIR), name="reports")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Configura o Jinja2Templates (usado para servir arquivos HTML diretamente)
-templates = Jinja2Templates(directory=STATIC_DIR)
-
-# Evento de inicialização do FastAPI
 @app.on_event("startup")
 async def startup_event():
-    # Cria as tabelas do banco de dados na inicialização
     create_db_tables()
-    print("Database tables checked/created.")
+    print("API iniciada. Tabelas do DB verificadas/criadas. Modelo YOLO carregado (se best.pt presente).")
 
+<<<<<<< HEAD
 
 # --- Rotas para servir as páginas HTML ---
 
@@ -81,3 +67,9 @@ async def read_results_page():
 
 # Incluir os routers/endpoints da API
 app.include_router(image_comparation.router, prefix="/api", tags=["Image Processing"])
+=======
+@app.get("/")
+async def serve_frontend():
+    """Serve a página principal do frontend."""
+    return FileResponse("static/index.html")
+>>>>>>> parent of 66fe5eb (Integração)

@@ -1,18 +1,16 @@
+// api-integration.js (REVISADO)
 /**
  * API Integration Module
  * Este arquivo contém funções específicas para integração com a API de backend
- * Utilize este arquivo para implementar as chamadas reais à API de processamento de imagem
+ * para processamento síncrono de imagens.
  */
 
 // Configuração da API
 const API_CONFIG = {
-    baseUrl: '/api', // Substitua pelo URL base da sua API
+    baseUrl: '/api',
     endpoints: {
-        upload: '/upload-image', // <--- NOVO ENDPOINT DE UPLOAD
-        status: '/processing-status',
-        result: '/processing-result'
-    },
-    requestInterval: 2000 // Intervalo em ms para verificar o status do processamento
+        processImages: '/process_images/' // Seu endpoint atual
+    }
 };
 
 /**
@@ -20,115 +18,52 @@ const API_CONFIG = {
  */
 class ProcessingAPI {
     constructor() {
-        this.processingId = null;
-        this.statusCheckInterval = null;
-        this.onProgressUpdate = null;
-        this.onProcessingComplete = null;
+        // Não precisamos de state para monitoramento assíncrono aqui
     }
 
     /**
-     * Envia um arquivo para a API para iniciar o processamento
-     * @param {File} file - O objeto File a ser enviado
-     * @returns {Promise<string>} - Promise que resolve com o ID de processamento
+     * Envia as imagens para a API de processamento.
+     * Assume um processamento síncrono e retorna os resultados diretamente.
+     * @param {FileList} files - Objeto FileList de um input type="file"
+     * @returns {Promise<Object>} - Promessa que resolve com os dados da resposta da API
      */
-    async uploadFile(file) {
+    async processImages(files) {
+        if (!files || files.length === 0) {
+            throw new Error("Nenhuma imagem selecionada para upload.");
+        }
+
         const formData = new FormData();
-        formData.append('file', file);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
 
         try {
-            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`, {
+            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.processImages}`, {
                 method: 'POST',
-                body: formData
+                body: formData // FormData para envio de arquivos
             });
 
             if (response.ok) {
                 const data = await response.json();
-                this.processingId = data.processing_id;
-                return this.processingId;
+                console.log("Processamento concluído com sucesso:", data);
+                return data; // Retorna os resultados da API
             } else {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || 'Erro desconhecido no upload.');
-            }
-        } catch (error) {
-            console.error('Falha na comunicação com a API (upload):', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Inicia o monitoramento do processamento de uma imagem
-     * @param {string} processingId - ID do processamento retornado pela API de upload
-     * @param {Function} progressCallback - Função chamada quando o progresso é atualizado
-     * @param {Function} completeCallback - Função chamada quando o processamento é concluído
-     */
-    startMonitoring(processingId, progressCallback, completeCallback) {
-        this.processingId = processingId;
-        this.onProgressUpdate = progressCallback;
-        this.onProcessingComplete = completeCallback;
-
-        // Inicia a verificação periódica do status
-        this.checkStatus(); // Chama imediatamente
-        this.statusCheckInterval = setInterval(() => this.checkStatus(), API_CONFIG.requestInterval);
-    }
-
-    /**
-     * Verifica o status do processamento na API
-     * @private
-     */
-    async checkStatus() {
-        if (!this.processingId) {
-            console.warn('Processing ID não definido para verificação de status.');
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.status}/${this.processingId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                
-                // Atualiza o progresso na UI
-                if (this.onProgressUpdate) {
-                    this.onProgressUpdate(data.progress, data.message); // Use 'message' em vez de 'statusMessage'
-                }
-
-                // Verifica se o processamento foi concluído
-                if (data.progress >= 100 && data.status === 'completed') { // Adicionado '&& data.status === 'completed''
-                    this.stopMonitoring();
-                    
-                    if (this.onProcessingComplete) {
-                        this.onProcessingComplete(data.result_id); // Use 'result_id' que vem do backend
-                    }
-                } else if (data.status === 'failed') { // Adicionado tratamento para falha
-                    this.stopMonitoring();
-                    if (this.onProcessingComplete) {
-                        this.onProcessingComplete(null, data.message); // Passa null para result_id e a mensagem de erro
-                    }
-                }
-            } else {
-                console.error('Erro ao verificar status do processamento:', await response.text());
-                this.stopMonitoring(); // Parar de monitorar em caso de erro na API
-                if (this.onProgressUpdate) {
-                     this.onProgressUpdate(0, 'Erro: Não foi possível obter o status.');
-                }
+                console.error('Erro ao processar imagens:', errorData.detail || response.statusText);
+                throw new Error(errorData.detail || "Erro desconhecido ao processar imagens.");
             }
         } catch (error) {
             console.error('Falha na comunicação com a API:', error);
-            this.stopMonitoring(); // Parar de monitorar em caso de erro de rede
-            if (this.onProgressUpdate) {
-                 this.onProgressUpdate(0, 'Erro de rede: Verifique sua conexão.');
-            }
+            throw error; // Propaga o erro para o chamador
         }
     }
 
     /**
-     * Para o monitoramento do processamento
+     * Redireciona para uma página de resultados, se necessário.
+     * Por enquanto, vamos retornar os dados diretamente na mesma página.
+     * @param {Object} results - Os resultados retornados da API
      */
+<<<<<<< HEAD
     stopMonitoring() {
         if (this.statusCheckInterval) {
             clearInterval(this.statusCheckInterval);
@@ -149,6 +84,16 @@ class ProcessingAPI {
             alert("O processamento falhou. Por favor, tente novamente.");
             window.location.href = '/painel_upload'; // Volta para a página de upload
         }
+=======
+    navigateToResults(results) {
+        // Implementar lógica para exibir os resultados ou redirecionar
+        // Por exemplo, você pode passar os resultados como um objeto JSON stringificado
+        // para a próxima página via localStorage ou queryString (se pequenos).
+        // Por agora, apenas logs.
+        console.log("Resultados para exibição:", results);
+        // window.location.href = `/painel-resultado?data=${encodeURIComponent(JSON.stringify(results))}`;
+        // Esta função será adaptada no script.js
+>>>>>>> parent of 66fe5eb (Integração)
     }
 }
 
