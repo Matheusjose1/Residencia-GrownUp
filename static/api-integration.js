@@ -142,7 +142,7 @@ class ProcessingAPI {
      */
     navigateToResults(resultId) {
         if (resultId) {
-            window.location.href = `/painel_resultado?id=${resultId}`; // Ajustado para /results
+            window.location.href = `/painel_resultados?id=${resultId}`; // Ajustado para /results
         } else {
             console.error("Não foi possível redirecionar: resultId é nulo ou inválido.");
             // Opcional: redirecionar para uma página de erro ou mostrar uma mensagem

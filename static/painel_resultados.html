@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados da Análise - Análise de Imagem</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        /* Adicione estilos básicos para o botão de download */
+        .download-button {
+            background-color: #4CAF50; /* Verde */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            display: inline-block; /* Para que o link se pareça com um botão */
+            text-decoration: none; /* Remove sublinhado do link */
+        }
+        .download-button:hover {
+            background-color: #45a049;
+        }
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .detection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .detection-table th, .detection-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .detection-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="/static/logo.png" alt="TPF Logo">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/painel_upload" class="nav-link">PAINEL DE UPLOAD</a></li>
+                    <li><a href="/painel-espera" class="nav-link">PAINEL DE ESPERA</a></li>
+                    <li><a href="/painel_resultados" class="nav-link active">PAINEL DE RESULTADO</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <div class="results-panel">
+                <h2>Resultados da Análise</h2>
+                <div id="resultsContent">
+                    <p>Carregando resultados...</p>
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const resultId = urlParams.get('id');
+            const resultsContent = document.getElementById('resultsContent');
+
+            if (!resultId) {
+                resultsContent.innerHTML = '<p class="error-message">ID do resultado não fornecido.</p>';
+                return;
+            }
+
+            try {
+                // Requisição ao endpoint da API para obter os resultados
+                const response = await fetch(`/api/processing-result/${resultId}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Erro ao carregar resultados.');
+                }
+
+                const data = await response.json();
+
+                let htmlContent = `
+                    <h3>Arquivo Original: ${data.original_filename}</h3>
+                `;
+
+                if (data.processed_image_url) {
+                    htmlContent += `
+                        <h4>Imagem Processada:</h4>
+                        <img src="${data.processed_image_url}" alt="Imagem Processada" class="result-image">
+                    `;
+                } else {
+                    htmlContent += `
+                        <p>Imagem processada não disponível.</p>
+                    `;
+                }
+
+                if (data.detection_data && data.detection_data.length > 0) {
+                    htmlContent += `
+                        <h4>Objetos Detectados:</h4>
+                        <table class="detection-table">
+                            <thead>
+                                <tr>
+                                    <th>Classe</th>
+                                    <th>Confiança</th>
+                                    <th>X1</th>
+                                    <th>Y1</th>
+                                    <th>X2</th>
+                                    <th>Y2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    data.detection_data.forEach(detection => {
+                        htmlContent += `
+                                <tr>
+                                    <td>${detection.class_name}</td>
+                                    <td>${(detection.confidence * 100).toFixed(2)}%</td>
+                                    <td>${detection.bbox_x1}</td>
+                                    <td>${detection.bbox_y1}</td>
+                                    <td>${detection.bbox_x2}</td>
+                                    <td>${detection.bbox_y2}</td>
+                                </tr>
+                        `;
+                    });
+                    htmlContent += `
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    htmlContent += `
+                        <p>Nenhum objeto detectado.</p>
+                    `;
+                }
+
+                // Adiciona o botão de download do Excel
+                if (data.excel_report_url) {
+                    htmlContent += `
+                        <a href="${data.excel_report_url}" class="download-button" download>Baixar Relatório Excel</a>
+                    `;
+                } else {
+                    htmlContent += `
+                        <p>Relatório Excel não disponível.</p>
+                    `;
+                }
+
+                resultsContent.innerHTML = htmlContent;
+
+            } catch (error) {
+                console.error('Erro ao carregar resultados:', error);
+                resultsContent.innerHTML = `<p class="error-message">Erro ao carregar os resultados: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

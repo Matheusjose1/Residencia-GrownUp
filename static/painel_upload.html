@@ -152,8 +152,8 @@
             <nav>
                 <ul>
                     <li><a href="/painel_upload" class="nav-link active">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/painel_espera" class="nav-link">PAINEL DE ESPERA</a></li>
-                    <li><a href="/painel_resultado" class="nav-link">PAINEL DE RESULTADO</a></li>
+                    <li><a href="/painel-espera" class="nav-link">PAINEL DE ESPERA</a></li>
+                    <li><a href="/painel_resultados" class="nav-link">PAINEL DE RESULTADO</a></li>
                 </ul>
             </nav>
         </header>
@@ -277,7 +277,8 @@
                         if (response.ok) {
                             const data = await response.json();
                             const processingId = data.processing_id; 
-                            window.location.href = `/painel-espera?id=${processingId}`; // Redireciona para a página de espera
+                            // ATENÇÃO: Redireciona para /painel-espera (com hífen)
+                            window.location.href = `/painel-espera?id=${processingId}`; 
                         } else {
                             const errorData = await response.json();
                             alert(`Erro no upload: ${errorData.detail || 'Ocorreu um erro desconhecido.'}`);

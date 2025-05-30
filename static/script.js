@@ -49,7 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProgressUI(100, 'Análise concluída!');
         processingAPI.stopMonitoring(); // Para de monitorar
         // Redireciona para a página de resultados com o ID do resultado
-        processingAPI.navigateToResults(resultId);
+        // ATENÇÃO: Redireciona para /painel_resultados (com 's' no final)
+        processingAPI.navigateToResults(resultId); 
     }
 
     // Verifica se um ID de processamento foi fornecido
@@ -61,7 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Se não houver ID, exibe uma mensagem de erro ou um fallback
         progressText.textContent = 'Nenhum ID de processamento encontrado. Redirecionando para o upload...';
         setTimeout(() => {
-            window.location.href = '/painel_upload';
+            // ATENÇÃO: Redireciona para /painel_upload (com underscore)
+            window.location.href = '/painel_upload'; 
         }, 3000); // Redireciona após 3 segundos
     }
 });

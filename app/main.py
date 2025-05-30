@@ -52,7 +52,6 @@ async def startup_event():
 @app.get("/", response_class=HTMLResponse, summary="Página inicial (Upload)")
 async def read_root():
     """Redireciona para a página HTML principal de upload de imagem."""
-    # AJUSTADO: Aponta para painel_upload.html
     with open(STATIC_DIR / "painel_upload.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
@@ -60,24 +59,23 @@ async def read_root():
 @app.get("/painel_upload", response_class=HTMLResponse, summary="Página de upload")
 async def read_upload_page():
     """Retorna a página HTML de upload de imagem."""
-    # AJUSTADO: Aponta para painel_upload.html
     with open(STATIC_DIR / "painel_upload.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 # Rota para a página de espera
-@app.get("/painel_espera", response_class=HTMLResponse, summary="Página de espera de processamento")
+# ATENÇÃO: ROTA AGORA É "/painel-espera" (com hífen)
+@app.get("/painel-espera", response_class=HTMLResponse, summary="Página de espera de processamento")
 async def read_wait_page():
     """Retorna a página HTML de espera."""
-    # AJUSTADO: Aponta para painel_espera.html
     with open(STATIC_DIR / "painel_espera.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 # Rota para a página de resultados
-@app.get("/painel_resultado", response_class=HTMLResponse, summary="Página de resultados")
+# ATENÇÃO: ROTA AGORA É "/painel_resultados" (com 's' no final)
+@app.get("/painel_resultados", response_class=HTMLResponse, summary="Página de resultados")
 async def read_results_page():
     """Retorna a página HTML de resultados."""
-    # AJUSTADO: Aponta para painel_resultado.html (removido o 'se' extra)
-    with open(STATIC_DIR / "painel_resultado.html", "r", encoding="utf-8") as f:
+    with open(STATIC_DIR / "painel_resultados.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 
