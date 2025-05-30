@@ -42,6 +42,40 @@
         .detection-table th {
             background-color: #f2f2f2;
         }
+        /* Estilo para mensagens de erro */
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        /* Ajuste para o contêiner de imagem e tabela, se necessário */
+        .results-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Espaço entre a imagem, tabela e botão */
+            align-items: center; /* Centraliza os itens */
+        }
+        .results-panel {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        /* Ajuste para centralizar o cabeçalho "Resultados da Análise" */
+        .results-panel h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Ajuste para centralizar o nome do arquivo original */
+        .results-panel h3 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        /* Ajuste para centralizar os títulos de seção */
+        .results-panel h4 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -53,7 +87,7 @@
             <nav>
                 <ul>
                     <li><a href="/painel_upload" class="nav-link">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/painel-espera" class="nav-link">PAINEL DE ESPERA</a></li>
+                    <li><a href="/painel_espera" class="nav-link">PAINEL DE ESPERA</a></li>
                     <li><a href="/painel_resultados" class="nav-link active">PAINEL DE RESULTADO</a></li>
                 </ul>
             </nav>
@@ -64,36 +98,35 @@
                 <h2>Resultados da Análise</h2>
                 <div id="resultsContent">
                     <p>Carregando resultados...</p>
-                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <script src="/static/api-integration.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             const urlParams = new URLSearchParams(window.location.search);
             const resultId = urlParams.get('id');
             const resultsContent = document.getElementById('resultsContent');
+            const processingAPI = new ProcessingAPI(); // Instancia a classe
 
             if (!resultId) {
-                resultsContent.innerHTML = '<p class="error-message">ID do resultado não fornecido.</p>';
+                resultsContent.innerHTML = '<p class="error-message">ID do resultado não fornecido na URL.</p>';
                 return;
             }
 
             try {
-                // Requisição ao endpoint da API para obter os resultados
-                const response = await fetch(`/api/processing-result/${resultId}`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Erro ao carregar resultados.');
-                }
-
-                const data = await response.json();
+                // Usar a função da classe ProcessingAPI para obter os resultados
+                const data = await processingAPI.getProcessingResult(resultId);
+                console.log("Dados de resultados recebidos:", data);
 
                 let htmlContent = `
                     <h3>Arquivo Original: ${data.original_filename}</h3>
+                    <div class="results-content-wrapper">
                 `;
 
+                // Adiciona a imagem processada, se disponível
                 if (data.processed_image_url) {
                     htmlContent += `
                         <h4>Imagem Processada:</h4>
@@ -105,6 +138,7 @@
                     `;
                 }
 
+                // Adiciona a tabela de detecções, se houver dados
                 if (data.detection_data && data.detection_data.length > 0) {
                     htmlContent += `
                         <h4>Objetos Detectados:</h4>
@@ -113,10 +147,6 @@
                                 <tr>
                                     <th>Classe</th>
                                     <th>Confiança</th>
-                                    <th>X1</th>
-                                    <th>Y1</th>
-                                    <th>X2</th>
-                                    <th>Y2</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,10 +156,6 @@
                                 <tr>
                                     <td>${detection.class_name}</td>
                                     <td>${(detection.confidence * 100).toFixed(2)}%</td>
-                                    <td>${detection.bbox_x1}</td>
-                                    <td>${detection.bbox_y1}</td>
-                                    <td>${detection.bbox_x2}</td>
-                                    <td>${detection.bbox_y2}</td>
                                 </tr>
                         `;
                     });
@@ -143,8 +169,13 @@
                     `;
                 }
 
-                // Adiciona o botão de download do Excel
+                // Adiciona o botão de download do Excel, se disponível
                 if (data.excel_report_url) {
+                    // O backend já deve retornar a URL completa para download,
+                    // então podemos usá-la diretamente.
+                    // Caso o backend retorne apenas o nome do arquivo, usar:
+                    // const excelDownloadUrl = processingAPI.getExcelDownloadUrl(data.excel_report_url.split('/').pop());
+                    // Mas assumindo que data.excel_report_url já é a URL completa para download:
                     htmlContent += `
                         <a href="${data.excel_report_url}" class="download-button" download>Baixar Relatório Excel</a>
                     `;
@@ -154,11 +185,12 @@
                     `;
                 }
 
+                htmlContent += `</div>`; // Fecha results-content-wrapper
                 resultsContent.innerHTML = htmlContent;
 
             } catch (error) {
                 console.error('Erro ao carregar resultados:', error);
-                resultsContent.innerHTML = `<p class="error-message">Erro ao carregar os resultados: ${error.message}</p>`;
+                resultsContent.innerHTML = `<p class="error-message">Erro ao carregar os resultados: ${error.message}. Por favor, tente novamente.</p>`;
             }
         });
     </script>

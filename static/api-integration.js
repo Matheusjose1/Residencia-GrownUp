@@ -1,15 +1,22 @@
-// api-integration.js (REVISADO)
+// app/static/api-integration.js (VERSÃO FINAL E CORRIGIDA, SEM MARCADORES DE FORMATAÇÃO)
 /**
  * API Integration Module
  * Este arquivo contém funções específicas para integração com a API de backend
- * para processamento síncrono de imagens.
+ * para upload e monitoramento de processamento de imagens.
  */
 
 // Configuração da API
 const API_CONFIG = {
     baseUrl: '/api',
     endpoints: {
-        processImages: '/process_images/' // Seu endpoint atual
+        // O endpoint para upload inicia o processamento assíncrono
+        uploadImage: '/upload-image',
+        // Endpoint para verificar o status do processamento
+        getProcessingStatus: '/processing-status/',
+        // Endpoint para obter os resultados finais
+        getProcessingResult: '/processing-result/',
+        // Endpoint para download do Excel
+        downloadExcel: '/download-excel/'
     }
 };
 
@@ -18,84 +25,104 @@ const API_CONFIG = {
  */
 class ProcessingAPI {
     constructor() {
-        // Não precisamos de state para monitoramento assíncrono aqui
+        // Não precisamos de estado interno para esta classe, pois será usada por um script externo
     }
 
     /**
-     * Envia as imagens para a API de processamento.
-     * Assume um processamento síncrono e retorna os resultados diretamente.
-     * @param {FileList} files - Objeto FileList de um input type="file"
-     * @returns {Promise<Object>} - Promessa que resolve com os dados da resposta da API
+     * Envia um arquivo de imagem para a API para iniciar o processamento assíncrono.
+     * @param {File} file - O objeto File da imagem selecionada.
+     * @returns {Promise<Object>} - Promessa que resolve com o ID de processamento.
      */
-    async processImages(files) {
-        if (!files || files.length === 0) {
+    async uploadImage(file) {
+        if (!file) {
             throw new Error("Nenhuma imagem selecionada para upload.");
         }
 
         const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-            formData.append('files', files[i]);
-        }
+        formData.append('file', file); // O backend espera 'file', não 'files'
 
         try {
-            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.processImages}`, {
+            // CORRIGIDO: Removido formatação LaTeX/Markdown
+            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.uploadImage}`, {
                 method: 'POST',
-                body: formData // FormData para envio de arquivos
+                body: formData
             });
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Processamento concluído com sucesso:", data);
-                return data; // Retorna os resultados da API
+                console.log("Upload bem-sucedido. ID de processamento:", data.processing_id);
+                return data; // Deve retornar { "processing_id": "seu-uuid", "message": "..." }
             } else {
                 const errorData = await response.json();
-                console.error('Erro ao processar imagens:', errorData.detail || response.statusText);
-                throw new Error(errorData.detail || "Erro desconhecido ao processar imagens.");
+                console.error('Erro ao fazer upload da imagem:', errorData.detail || response.statusText);
+                throw new Error(errorData.detail || "Erro desconhecido ao fazer upload.");
             }
         } catch (error) {
-            console.error('Falha na comunicação com a API:', error);
-            throw error; // Propaga o erro para o chamador
+            console.error('Falha na comunicação com a API (upload):', error);
+            throw error;
         }
     }
 
     /**
-     * Redireciona para uma página de resultados, se necessário.
-     * Por enquanto, vamos retornar os dados diretamente na mesma página.
-     * @param {Object} results - Os resultados retornados da API
+     * Consulta o status de um processamento específico.
+     * @param {string} processingId - O ID do processamento a ser verificado.
+     * @returns {Promise<Object>} - Promessa que resolve com o objeto de status.
      */
-<<<<<<< HEAD
-    stopMonitoring() {
-        if (this.statusCheckInterval) {
-            clearInterval(this.statusCheckInterval);
-            this.statusCheckInterval = null;
+    async getProcessingStatus(processingId) {
+        try {
+            // CORRIGIDO: Removido formatação LaTeX/Markdown
+            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.getProcessingStatus}${processingId}`);
+            if (response.ok) {
+                const data = await response.json();
+                return data; // Deve retornar { "progress": N, "status": "...", "message": "...", "result_id": N }
+            } else if (response.status === 404) {
+                throw new Error("ID de processamento não encontrado.");
+            } else {
+                const errorData = await response.json();
+                console.error('Erro ao obter status:', errorData.detail || response.statusText);
+                throw new Error(errorData.detail || "Erro desconhecido ao obter status.");
+            }
+        } catch (error) {
+            console.error('Falha na comunicação com a API (status):', error);
+            throw error;
         }
     }
 
     /**
-     * Redireciona para a página de resultados
-     * @param {string} resultId - ID do resultado do processamento
+     * Obtém os resultados finais de um processamento concluído.
+     * @param {number} resultId - O ID do resultado do processamento (retornado pelo status).
+     * @returns {Promise<Object>} - Promessa que resolve com os dados completos do resultado.
      */
-    navigateToResults(resultId) {
-        if (resultId) {
-            window.location.href = `/painel_resultados?id=${resultId}`; // Ajustado para /results
-        } else {
-            console.error("Não foi possível redirecionar: resultId é nulo ou inválido.");
-            // Opcional: redirecionar para uma página de erro ou mostrar uma mensagem
-            alert("O processamento falhou. Por favor, tente novamente.");
-            window.location.href = '/painel_upload'; // Volta para a página de upload
+    async getProcessingResult(resultId) {
+        try {
+            // CORRIGIDO: Removido formatação LaTeX/Markdown
+            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.getProcessingResult}${resultId}`);
+            if (response.ok) {
+                const data = await response.json();
+                return data; // Deve retornar os detalhes completos do resultado
+            } else if (response.status === 404) {
+                throw new Error("Resultado não encontrado no banco de dados.");
+            } else {
+                const errorData = await response.json();
+                console.error('Erro ao obter resultado:', errorData.detail || response.statusText);
+                throw new Error(errorData.detail || "Erro desconhecido ao obter resultado.");
+            }
+        } catch (error) {
+            console.error('Falha na comunicação com a API (resultado):', error);
+            throw error;
         }
-=======
-    navigateToResults(results) {
-        // Implementar lógica para exibir os resultados ou redirecionar
-        // Por exemplo, você pode passar os resultados como um objeto JSON stringificado
-        // para a próxima página via localStorage ou queryString (se pequenos).
-        // Por agora, apenas logs.
-        console.log("Resultados para exibição:", results);
-        // window.location.href = `/painel-resultado?data=${encodeURIComponent(JSON.stringify(results))}`;
-        // Esta função será adaptada no script.js
->>>>>>> parent of 66fe5eb (Integração)
+    }
+
+    /**
+     * Constrói a URL para download do arquivo Excel.
+     * @param {string} filename - O nome do arquivo Excel.
+     * @returns {string} - A URL completa para download.
+     */
+    getExcelDownloadUrl(filename) {
+        // CORRIGIDO: Removido formatação LaTeX/Markdown
+        return `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.downloadExcel}${filename}`;
     }
 }
 
-// Exporta a classe para uso no script principal
+// Exporta a classe para uso no script principal (script.js)
 window.ProcessingAPI = ProcessingAPI;

@@ -1,7 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy import create_engine, Column, Integer, String, JSON # <--- Certifique-se de ter 'JSON' aqui
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.types import DateTime # <-- MUDANÇA AQUI: Importe DateTime de sqlalchemy.types
-from datetime import datetime # Importe datetime do módulo padrão Python para usar em default=datetime.utcnow
+from sqlalchemy.types import DateTime
+from datetime import datetime
 
 from pathlib import Path
 import os
@@ -24,6 +24,19 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base para nossos modelos declarativos. Nossas classes de modelo herdarão desta base.
 Base = declarative_base()
+
+# --- CLASSE DE MODELO TrashDetectionResult (PRECISA ESTAR AQUI!) ---
+class TrashDetectionResult(Base):
+    __tablename__ = "trash_detection_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    processing_id = Column(String, unique=True, index=True, nullable=False)
+    original_filename = Column(String, nullable=False)
+    processed_filename = Column(String, nullable=True)
+    excel_report_filename = Column(String, nullable=True) # Coluna para o nome do arquivo Excel
+    detection_data = Column(JSON, nullable=True) # Dados das detecções em formato JSON
+    timestamp = Column(DateTime, default=datetime.utcnow) # Adicionando timestamp para registro
+
 
 # Função para obter uma sessão de banco de dados
 def get_db():
