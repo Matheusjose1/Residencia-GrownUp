@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import os
 from typing import List, Dict, Any, Tuple
 

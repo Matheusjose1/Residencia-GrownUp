@@ -160,142 +160,23 @@
 
         <main>
             <div class="upload-panel">
-                <h2>Faça o Upload da Imagem ou Vídeo</h2>
+                <h2>Faça o Upload da Imagem</h2>
                 <div class="drop-area" id="dropArea">
                     <div class="preview-container" id="previewContainer"></div> 
                     <p id="dropText">Arraste e solte seu arquivo aqui ou clique para selecionar</p>
-                    <input type="file" id="fileInput" accept="image/*,video/*">
+                <input type="file" id="imageInput" accept="image/*,video/*" multiple style="display: none;">
                     <p id="file-name"></p>
                 </div>
-                <button class="upload-button" id="uploadButton">Processar Arquivo</button>
+                <button id="selectImagesButton" class="button">Selecionar Imagens</button>
+                <span id="selectedImagesCount" class="file-info">Nenhuma imagem selecionada.</span>
+                <button class="button" id="processImagesButton" disabled>Processar Arquivo</button>
+
+ 
             </div>
         </main>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropArea = document.getElementById('dropArea');
-            const fileInput = document.getElementById('fileInput');
-            const fileNameDisplay = document.getElementById('file-name');
-            const uploadButton = document.getElementById('uploadButton');
-            const previewContainer = document.getElementById('previewContainer'); // Novo elemento
-            const dropText = document.getElementById('dropText'); // Texto da área de drop
-            let selectedFile = null;
-
-            // Previne o comportamento padrão de abrir o arquivo quando arrastado
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            // Destaca a área de drop ao arrastar o arquivo
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropArea.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight() {
-                dropArea.classList.add('highlight');
-            }
-
-            function unhighlight() {
-                dropArea.classList.remove('highlight');
-            }
-
-            // Lidar com o drop do arquivo
-            dropArea.addEventListener('drop', handleDrop, false);
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                handleFiles(files);
-            }
-
-            // Lidar com a seleção de arquivo ao clicar
-            dropArea.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
-
-            function handleFiles(files) {
-                if (files.length > 0) {
-                    selectedFile = files[0];
-                    fileNameDisplay.textContent = `Arquivo selecionado: ${selectedFile.name}`;
-                    uploadButton.disabled = false; // Habilita o botão após seleção
-
-                    // Lógica para pré-visualização
-                    const fileReader = new FileReader();
-                    fileReader.onload = function(event) {
-                        previewContainer.innerHTML = ''; // Limpa qualquer pré-visualização anterior
-                        if (selectedFile.type.startsWith('image/')) {
-                            const img = document.createElement('img');
-                            img.src = event.target.result;
-                            img.alt = 'Pré-visualização da imagem';
-                            previewContainer.appendChild(img);
-                        } else if (selectedFile.type.startsWith('video/')) {
-                            const video = document.createElement('video');
-                            video.src = event.target.result;
-                            video.controls = true; // Adiciona controles de vídeo
-                            video.muted = true; // Inicia mutado
-                            video.loop = true; // Faz loop
-                            video.autoplay = true; // Tenta autoplay
-                            video.setAttribute('playsinline', ''); // Para iOS
-                            previewContainer.appendChild(video);
-                        }
-                        dropText.style.display = 'none'; // Esconde o texto "Arrasta e solte..."
-                    };
-                    fileReader.readAsDataURL(selectedFile); // Lê o arquivo como URL de dados
-                } else {
-                    selectedFile = null;
-                    fileNameDisplay.textContent = '';
-                    uploadButton.disabled = true; // Desabilita se nenhum arquivo
-                    previewContainer.innerHTML = ''; // Limpa a pré-visualização
-                    dropText.style.display = 'block'; // Mostra o texto "Arrasta e solte..."
-                }
-            }
-
-            // Lidar com o clique do botão de upload
-            uploadButton.addEventListener('click', async () => { 
-                if (selectedFile) {
-                    const formData = new FormData();
-                    formData.append('file', selectedFile);
-
-                    try {
-                        const response = await fetch('/api/upload-image', { // Endpoint da API para upload
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            const processingId = data.processing_id; 
-                            // ATENÇÃO: Redireciona para /painel-espera (com hífen)
-                            window.location.href = `/painel-espera?id=${processingId}`; 
-                        } else {
-                            const errorData = await response.json();
-                            alert(`Erro no upload: ${errorData.detail || 'Ocorreu um erro desconhecido.'}`);
-                            console.error('Erro no upload:', errorData);
-                        }
-                    } catch (error) {
-                        alert('Falha na comunicação com o servidor.');
-                        console.error('Erro de rede:', error);
-                    }
-                } else {
-                    alert('Por favor, selecione um arquivo para upload.');
-                }
-            });
-
-            // Inicialmente, desabilita o botão se nenhum arquivo for selecionado
-            uploadButton.disabled = true; 
-        });
-    </script>
+    <script src="/static/script_upload.js"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>

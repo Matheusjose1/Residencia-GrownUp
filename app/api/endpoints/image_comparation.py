@@ -5,12 +5,21 @@ from typing import Dict, List, Any
 from fastapi import APIRouter, File, UploadFile, BackgroundTasks, HTTPException, status, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
-import pandas as pd # <--- MANTENHA ESTA IMPORTAÇÃO
-import traceback # <--- MANTENHA ESTA IMPORTAÇÃO
+import pandas as pd
+import traceback
+
+from app.core.database import (
+    SessionLocal,
+    create_db_and_tables,
+    get_db,
+    ImageProcessingResult,
+    BatchProcessing,
+    ImageProcessing
+)
 
 # Importar configurações e modelo YOLO
 from app.core.config import PROCESSED_IMAGES_DIR, YOLO_CLASSES, model_yolo_lixeiras, XLSX_RESULTS_DIR
-from app.core.database import SessionLocal, TrashDetectionResult, create_db_tables, get_db
+
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -132,7 +141,7 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
         db = SessionLocal()
         result_id = None
         try:
-            db_entry = TrashDetectionResult(
+            db_entry = ImageProcessingResult(
                 processing_id=processing_id,
                 original_filename=original_filename,
                 processed_filename=processed_image_filename,
@@ -237,7 +246,7 @@ async def get_processing_result(result_id: int, db: Session = Depends(get_db)):
     Retorna a imagem processada e os dados de detecção, incluindo URL para download do Excel.
     """
     try:
-        db_entry = db.query(TrashDetectionResult).filter(TrashDetectionResult.id == result_id).first()
+        db_entry = db.query(ImageProcessingResult).filter(ImageProcessingResult.id == result_id).first()
         if not db_entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Resultado não encontrado no banco de dados.")

@@ -1,16 +1,10 @@
-// app/static/script.js (VERSÃO FINAL E CORRIGIDA PARA POLLING)
-/**
- * Script para controle da barra de progresso e monitoramento do processamento
- * Integração real com a API de backend.
- */
 
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos DOM
     const progressFill = document.getElementById('progressFill');
     const progressText = document.querySelector('.progress-text');
     
-    // Instancia a classe de integração da API
-    // Certifique-se que api-integration.js é carregado antes de script.js no seu HTML
+
     const processingAPI = new ProcessingAPI(); 
 
     let statusCheckInterval; // Variável para armazenar o ID do setInterval

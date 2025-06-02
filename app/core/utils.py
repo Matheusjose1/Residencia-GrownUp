@@ -1,7 +1,4 @@
 import os
-import csv  # Não mais usado, mas deixo o import para referência
-from datetime import datetime
-import uuid
 import openpyxl
 from openpyxl.styles import Font, Alignment
 

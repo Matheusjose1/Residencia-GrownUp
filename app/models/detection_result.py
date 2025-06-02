@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.types import DateTime # Certifique-se que esta linha está aqui (capitalizada)
-from datetime import datetime # <-- MUDANÇA AQUI: Adicione esta linha para importar datetime (minúscula)
+from sqlalchemy.types import DateTime
+from datetime import datetime
 
 from app.core.database import Base # Importa a Base que definimos
 

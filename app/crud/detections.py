@@ -39,11 +39,6 @@ def create_multiple_detections(db: Session, detections_data: List[dict]) -> List
     if db_detections:
         db.add_all(db_detections)
         db.commit()
-        # O refresh individualmente pode ser caro para muitos itens.
-        # Uma alternativa seria re-consultar o banco ou aceitar que os objetos
-        # não terão os IDs gerados automaticamente até uma nova consulta.
-        # Para um número moderado, refresh em loop pode ser ok.
-        # Para este caso, vamos manter o refresh para ter os IDs no retorno.
         for db_detection in db_detections:
             db.refresh(db_detection)
 

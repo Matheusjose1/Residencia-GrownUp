@@ -9,7 +9,21 @@ from pathlib import Path
 
 # Importar seus routers/endpoints
 from app.api.endpoints import image_comparation
-from app.core.database import create_db_tables, get_db
+
+from app.core.database import ( # CORRIGIDO: Aponta para o novo caminho do módulo de DB
+    create_db_and_tables,
+    create_db_batch_entry,
+    get_db_batch_status,
+    update_db_batch_status,
+    create_db_processing_entry,
+    get_db_processing_status,
+    update_db_processing_status,
+    get_db_results,
+    get_db_all_images_for_batch,
+    SessionLocal,
+    ImageProcessing,
+    ImageProcessingResult
+)
 
 # Cria a aplicação FastAPI
 app = FastAPI(
@@ -27,7 +41,7 @@ PROCESSED_IMAGES_DIR = Path("data/output/imagens_processadas")
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-# Monta o diretório 'static' para servir arquivos estáticos (CSS, JS, imagens do frontend)
+# Monta o diretório 'static' para servir arquivos estáticos (frontend)
 # A URL acessível será /static/<nome_do_arquivo>
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -38,15 +52,15 @@ app.mount("/processed_images", StaticFiles(directory=PROCESSED_IMAGES_DIR), name
 # Configura o Jinja2Templates (usado para servir arquivos HTML diretamente)
 templates = Jinja2Templates(directory=STATIC_DIR)
 
-# Evento de inicialização do FastAPI
+# Inicialização do FastAPI
 @app.on_event("startup")
 async def startup_event():
     # Cria as tabelas do banco de dados na inicialização
-    create_db_tables()
+    create_db_and_tables()
     print("Database tables checked/created.")
 
 
-# --- Rotas para servir as páginas HTML ---
+# Rotas
 
 # Rota raiz ("/") - Assume que você quer que a página de upload seja a primeira
 @app.get("/", response_class=HTMLResponse, summary="Página inicial (Upload)")
