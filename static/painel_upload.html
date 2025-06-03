@@ -4,155 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload de Imagem - Análise de Resíduos</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <style>
-        /* Estilos específicos para o painel de upload, pode ir para styles.css depois */
-        body {
-            background-color: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Centraliza verticalmente o conteúdo principal */
-            align-items: center; /* Centraliza horizontalmente o conteúdo principal */
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            justify-content: flex-start; /* Alinha o conteúdo ao topo do container */
-        }
-
-        header {
-            width: 100%; /* Garante que o header ocupe a largura total */
-            margin-bottom: 20px; /* Adiciona um espaço abaixo do header */
-        }
-
-        main {
-            flex-grow: 1; /* Permite que o main ocupe o espaço restante */
-            display: flex;
-            justify-content: center;
-            align-items: center; /* Centraliza o painel de upload na tela */
-            width: 100%;
-        }
-
-        .upload-panel {
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            /* Removido margin: 50px auto; pois o main está centralizando */
-        }
-
-        .upload-panel h2 {
-            color: #333;
-            margin-bottom: 25px;
-            font-size: 2em;
-        }
-
-        .drop-area {
-            border: 3px dashed #ccc;
-            border-radius: 8px;
-            padding: 20px; /* Reduzido um pouco para a pré-visualização */
-            margin-bottom: 20px; /* Reduzido um pouco */
-            cursor: pointer;
-            transition: border-color 0.3s ease, background-color 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 200px;
-            overflow: hidden; /* Garante que a imagem não transborde */
-            position: relative; /* Para posicionar a imagem ou vídeo */
-        }
-
-        .drop-area.highlight {
-            border-color: #00a0e4;
-            background-color: #e8f4fd;
-        }
-
-        .drop-area p {
-            color: #777;
-            font-size: 1.1em;
-            margin-top: 15px;
-            z-index: 1; /* Garante que o texto fique acima da imagem */
-            background-color: rgba(255, 255, 255, 0.7); /* Fundo semi-transparente para o texto sobre a imagem */
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
-        /* Estilo para a pré-visualização da imagem/vídeo */
-        .preview-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: rgba(0, 0, 0, 0.1); /* Um leve fundo enquanto carrega */
-            overflow: hidden;
-        }
-
-        .preview-container img,
-        .preview-container video {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; /* Ajusta a imagem/vídeo dentro do container */
-            border-radius: 8px; /* Mantém as bordas arredondadas */
-        }
-
-
-        .drop-area input[type="file"] {
-            display: none; /* Esconde o input de arquivo padrão */
-        }
-
-        .upload-button {
-            background-color: #0088cc;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%; /* Botão ocupa a largura total do painel */
-            max-width: 300px; /* Limita a largura máxima do botão */
-        }
-
-        .upload-button:hover {
-            background-color: #006bb3;
-        }
-
-        #file-name {
-            margin-top: 15px;
-            font-style: italic;
-            color: #555;
-            z-index: 1; /* Garante que o nome do arquivo também fique acima */
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 3px 8px;
-            border-radius: 3px;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles/global.css"> 
+    <link rel="stylesheet" href="/static/styles/painel_upload.css">
+    <script src="/static/scripts/api-integration.js" defer></script>
+    <script src="/static/scripts/script_upload.js" defer></script>
 </head>
 <body>
     <div class="container">
         <header>
             <div class="logo">
-                <img src="/static/logo.png" alt="TPF Logo">
+                <img src="/static/images/logo.png" alt="TPF Logo">
             </div>
             <nav>
                 <ul>
                     <li><a href="/painel_upload" class="nav-link active">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/painel-espera" class="nav-link">PAINEL DE ESPERA</a></li>
+                    <li><a href="/painel_espera" class="nav-link">PAINEL DE ESPERA</a></li>
                     <li><a href="/painel_resultados" class="nav-link">PAINEL DE RESULTADO</a></li>
                 </ul>
             </nav>
@@ -164,19 +30,16 @@
                 <div class="drop-area" id="dropArea">
                     <div class="preview-container" id="previewContainer"></div> 
                     <p id="dropText">Arraste e solte seu arquivo aqui ou clique para selecionar</p>
-                <input type="file" id="imageInput" accept="image/*,video/*" multiple style="display: none;">
+                    <input type="file" id="imageInput" accept="image/*,video/*" multiple style="display: none;">
                     <p id="file-name"></p>
                 </div>
                 <button id="selectImagesButton" class="button">Selecionar Imagens</button>
                 <span id="selectedImagesCount" class="file-info">Nenhuma imagem selecionada.</span>
                 <button class="button" id="processImagesButton" disabled>Processar Arquivo</button>
-
- 
+                <div id="message" class="message" style="display: none;"></div>
             </div>
         </main>
     </div>
 
-    <script src="/static/script_upload.js"></script>
-    <script src="/static/script.js"></script>
-</body>
+    </body>
 </html>

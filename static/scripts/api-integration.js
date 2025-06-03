@@ -2,11 +2,11 @@
 async function uploadImagesBatch(files) {
     const formData = new FormData();
     files.forEach(file => {
-        formData.append('images', file); // 'images' deve corresponder ao nome do parâmetro no seu endpoint FastAPI (List[UploadFile] = File(...))
+        formData.append('files', file); // 'images' deve corresponder ao nome do parâmetro no seu endpoint FastAPI (List[UploadFile] = File(...))
     });
 
     try {
-        const response = await fetch('/api/upload-images', {
+        const response = await fetch('/api/upload-image', {
             method: 'POST',
             body: formData,
         });

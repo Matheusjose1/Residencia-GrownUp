@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Espera - Análise de Imagem</title>
-    <link rel="stylesheet" href="/static/styles.css"> 
-
-</head>
+    <title>Monitoramento de Processamento de Lote</title>
+    <link rel="stylesheet" href="/static/styles/global.css"> 
+    <link rel="stylesheet" href="/static/styles/painel_espera.css">
+    <script src="/static/scripts/api-integration.js" defer></script> 
+    <script src="/static/scripts/script_espera.js" defer></script> </head>
 <body>
     <div class="container">
         <header>
             <div class="logo">
-                <img src="/static/logo.png" alt="TPF Logo"> 
+                <img src="/static/images/logo.png" alt="TPF Logo"> 
             </div>
             <nav>
                 <ul>
                     <li><a href="/painel_upload" class="nav-link">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/painel-espera" class="nav-link active">PAINEL DE ESPERA</a></li>
-                    <li><a href="/painel_resultados" class="nav-link">PAINEL DE RESULTADO</a></li>
+                    <li><a href="/painel_espera" class="nav-link active">PAINEL DE ESPERA</a></li> <li><a href="/painel_resultados" class="nav-link">PAINEL DE RESULTADO</a></li>
                 </ul>
             </nav>
         </header>
@@ -25,23 +25,36 @@
         <main>
             <div class="processing-panel">
                 
-                <h2>A imagem está sendo processada</h2>
+                <h2>Status do Lote: <span id="batchStatusMessage">Carregando...</span></h2> 
                 
                 <div class="loading-spinner">
-                    <div class="spinner"></div>
-                </div>
+                    <div class="spinner"></div> </div>
                 
                 <p class="processing-message">
                     Nossa inteligência artificial está analisando seu conteúdo.<br>
                     Isso pode levar alguns minutos.
                 </p>
                 
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-text">Analisando a imagem...</div>
+                <div class="progress-bar-container"> 
+                    <div class="progress-bar-fill" id="batchProgressFill" style="width: 0%;"></div>
+                    <span class="progress-text" id="batchProgressText">0%</span>
                 </div>
+                
+                <p class="batch-summary">
+                    Total de imagens: <span id="totalImages">0</span> |
+                    Processadas: <span id="processedImages">0</span> |
+                    Concluídas: <span id="completedImages">0</span> |
+                    Falhas: <span id="failedImages">0</span>
+                </p>
+
+                <div class="image-list-container">
+                    <h3>Detalhes por Imagem:</h3>
+                    <ul id="imageList">
+                        </ul>
+                    </div>
+                    <div class="navigation-buttons">
+                        <button class="button" onclick="window.location.href='/painel_upload'">Fazer Novo Upload</button>
+                    </div>
                 
                 <div class="info-box">
                     <span class="info-icon">ℹ️</span>
@@ -50,8 +63,5 @@
             </div>
         </main>
     </div>
-
-    <script src="/static/api-integration.js"></script> 
-    <script src="/static/script_espera.js"></script> 
-</body>
+    </body>
 </html>

@@ -1,6 +1,7 @@
 import uuid
 import os
 import shutil
+import json  # Adicionar import do json
 from typing import Dict, List, Any
 from fastapi import APIRouter, File, UploadFile, BackgroundTasks, HTTPException, status, Depends
 from fastapi.responses import JSONResponse, FileResponse
@@ -14,7 +15,15 @@ from app.core.database import (
     get_db,
     ImageProcessingResult,
     BatchProcessing,
-    ImageProcessing
+    ImageProcessing,
+    # Funções assíncronas do DB
+    update_db_processing_status,
+    get_db_processing_status,  # Pode ser útil para pegar o registro ImageProcessing completo
+    create_db_processing_entry,
+    create_db_batch_entry,
+    get_db_results,
+    get_db_batch_status,# Função para pegar o resultado completo
+    get_db_all_images_for_batch  # Se você tiver um endpoint para isso
 )
 
 # Importar configurações e modelo YOLO
@@ -32,10 +41,34 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
     """
     Função de background para processar a imagem com YOLO e gerar relatório XLSX.
     """
-    processing_status[processing_id] = {"progress": 0, "status": "in_progress", "message": "Iniciando processamento...",
-                                        "result_id": None}
+    processing_status[processing_id] = {
+        "progress": 0,
+        "status": "in_progress",
+        "message": "Iniciando processamento...",
+        "result_id": None
+    }
+    await update_db_processing_status(
+        processing_id=processing_id,
+        status="in_progress",
+        message="Iniciando processamento...",
+        progress=0
+    )
 
     print(f"[{processing_id}] INFO: Início do processamento da imagem.")
+
+    # Variáveis para armazenar os resultados do processamento
+    detected_objects_data: List[Dict[str, Any]] = []
+    processed_image_filename: str = None
+    final_processed_image_path: Path = None
+    excel_filename: str = None
+    excel_filepath: Path = None
+
+    # ATENÇÃO AQUI: Garante que yolo_saved_dir seja um Path object vazio ou None
+    # Podemos inicializá-lo para um diretório temporário específico para esta task desde o início
+    # ou garantir que ele seja definido antes de qualquer exceção.
+    # A forma mais segura é inicializar com None e ter uma lógica de fallback.
+    yolo_saved_dir: Path = None  # Manter a inicialização para None
+
     try:
         if not model_yolo_lixeiras:
             raise ValueError("Modelo YOLO não carregado. Não é possível processar a imagem.")
@@ -43,15 +76,28 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
 
         processing_status[processing_id]["progress"] = 10
         processing_status[processing_id]["message"] = "Carregando imagem e preparando para detecção..."
+        await update_db_processing_status(
+            processing_id=processing_id,
+            progress=10,
+            message="Carregando imagem e preparando para detecção..."
+        )
 
+        # Crie um diretório de saída exclusivo para esta execução do YOLO
         yolo_output_base_dir = PROCESSED_IMAGES_DIR / "yolo_runs"
-        yolo_output_base_dir.mkdir(parents=True, exist_ok=True)
-        print(f"[{processing_id}] INFO: Diretório YOLO criado/verificado: {yolo_output_base_dir}")
-
         yolo_run_name = f"run_{processing_id}"
+        # A pasta temporária onde o YOLO salvará os resultados
+        yolo_saved_dir = yolo_output_base_dir / yolo_run_name  # <--- ATRIBUIÇÃO MAIS CEDO AQUI!
+        yolo_saved_dir.mkdir(parents=True, exist_ok=True)  # Garante que a pasta exista
+
+        print(f"[{processing_id}] INFO: Diretório YOLO criado/verificado: {yolo_saved_dir}")
 
         processing_status[processing_id]["progress"] = 30
         processing_status[processing_id]["message"] = "Executando detecção de objetos..."
+        await update_db_processing_status(
+            processing_id=processing_id,
+            progress=30,
+            message="Executando detecção de objetos..."
+        )
 
         print(f"[{processing_id}] INFO: Chamando model_yolo_lixeiras.predict() com source: {file_path}")
         results = model_yolo_lixeiras.predict(
@@ -59,27 +105,34 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
             save=True,
             conf=0.25,
             iou=0.7,
-            project=str(yolo_output_base_dir),
-            name=yolo_run_name,
+            project=str(yolo_output_base_dir),  # O 'project' é o diretório pai
+            name=yolo_run_name,  # O 'name' é o subdiretório dentro do project
             stream=False,
             verbose=False
         )
-        print(f"[{processing_id}] INFO: model_yolo_lixeiras.predict() concluído. Resultados: {len(results) if results else 0}")
-
+        print(
+            f"[{processing_id}] INFO: model_yolo_lixeiras.predict() concluído. Resultados: {len(results) if results else 0}")
 
         processing_status[processing_id]["progress"] = 70
         processing_status[processing_id]["message"] = "Analisando resultados e preparando dados..."
+        await update_db_processing_status(
+            processing_id=processing_id,
+            progress=70,
+            message="Analisando resultados e preparando dados..."
+        )
 
-        detected_objects_data = []
-        processed_image_filename = None
+        # Note: yolo_saved_dir já está definido agora.
+        # result.save_dir deveria ser o mesmo que yolo_saved_dir se o YOLO funcionou como esperado
+        # mas vamos manter a lógica de procurar a imagem salva.
 
         if results and len(results) > 0:
             result = results[0]
-            yolo_saved_dir = Path(result.save_dir)
-            print(f"[{processing_id}] INFO: YOLO saved directory: {yolo_saved_dir}")
+            # Confirma que o diretório onde o YOLO salvou é o que esperamos
+            # assert Path(result.save_dir) == yolo_saved_dir, "Caminho salvo pelo YOLO não corresponde ao esperado!"
 
             temp_processed_yolo_image_path = None
-            for f in yolo_saved_dir.iterdir():
+            # Iterar o diretório que o YOLO deveria ter criado/usado
+            for f in yolo_saved_dir.iterdir():  # <-- Usa yolo_saved_dir diretamente
                 if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.webp']:
                     temp_processed_yolo_image_path = f
                     break
@@ -90,12 +143,12 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
                 shutil.move(str(temp_processed_yolo_image_path), str(final_processed_image_path))
                 print(f"[{processing_id}] INFO: Imagem processada movida para: {final_processed_image_path}")
             else:
-                print(f"[{processing_id}] AVISO: Imagem processada pelo YOLO não encontrada em {yolo_saved_dir}. Salvará original.")
+                print(
+                    f"[{processing_id}] AVISO: Imagem processada pelo YOLO não encontrada em {yolo_saved_dir}. Copiando original.")
                 processed_image_filename = f"{processing_id}_{original_filename}"
                 final_processed_image_path = PROCESSED_IMAGES_DIR / processed_image_filename
                 shutil.copy(str(file_path), str(final_processed_image_path))
                 print(f"[{processing_id}] INFO: Imagem original copiada para: {final_processed_image_path}")
-
 
             print(f"[{processing_id}] INFO: Extraindo dados de detecção...")
             for box in result.boxes:
@@ -114,163 +167,263 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
                 })
             print(f"[{processing_id}] INFO: {len(detected_objects_data)} objetos detectados.")
 
-
         # --- Geração do XLSX ---
-        excel_filename = None
         if detected_objects_data:
             print(f"[{processing_id}] INFO: Iniciando geração do relatório XLSX...")
             try:
                 XLSX_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-
-                # Verificar se 'bbox' está no dicionário e achatá-lo para o DataFrame
-                # Se você decidiu ter bbox_x1 etc. como colunas separadas no DB, certifique-se que detection_data tem esses campos
-                # O código atual já faz isso (x1, y1, x2, y2 direto no dicionário), então só precisa do DataFrame.
                 df = pd.DataFrame(detected_objects_data)
                 excel_filename = f"detection_report_{processing_id}.xlsx"
                 excel_filepath = XLSX_RESULTS_DIR / excel_filename
                 df.to_excel(excel_filepath, index=False, engine='openpyxl')
-
                 print(f"[{processing_id}] INFO: Relatório Excel gerado em: {excel_filepath}")
             except Exception as excel_e:
                 print(f"[{processing_id}] ERRO ao gerar relatório Excel: {excel_e}")
                 traceback.print_exc()
                 excel_filename = None
+                excel_filepath = None
 
-        # --- SALVAR NO BANCO DE DADOS (SQLite) ---
+        # --- SALVAR NO BANCO DE DADOS ---
         print(f"[{processing_id}] INFO: Salvando resultados no banco de dados...")
-        db = SessionLocal()
-        result_id = None
-        try:
-            db_entry = ImageProcessingResult(
-                processing_id=processing_id,
-                original_filename=original_filename,
-                processed_filename=processed_image_filename,
-                excel_report_filename=excel_filename, # <--- MANTENHA ISSO!
-                detection_data=detected_objects_data
-            )
-            db.add(db_entry)
-            db.commit()
-            db.refresh(db_entry)
-            result_id = db_entry.id
-            print(f"[{processing_id}] INFO: Resultados salvos no DB com result_id: {result_id}")
-        except Exception as db_e:
-            db.rollback()
-            print(f"[{processing_id}] ERRO ao salvar no banco de dados: {db_e}")
-            traceback.print_exc()
-            processing_status[processing_id]["message"] = f"Erro ao salvar resultados: {db_e}"
-        finally:
-            db.close()
 
-        # Limpar diretório temporário do YOLO para esta run
-        if yolo_saved_dir and yolo_saved_dir.exists():
-            shutil.rmtree(str(yolo_saved_dir))
-            print(f"[{processing_id}] INFO: Diretório temporário YOLO limpo: {yolo_saved_dir}")
+        status_message = "Processamento concluído com sucesso!"
+        if not processed_image_filename:
+            status_message = "Processamento concluído, mas sem imagem YOLO processada."
+        if not excel_filename:
+            status_message += " Erro ao gerar relatório Excel."
 
-        # Atualizar status final
-        processing_status[processing_id]["progress"] = 100
-        processing_status[processing_id]["status"] = "completed"
-        processing_status[processing_id]["message"] = "Processamento concluído com sucesso!"
-        processing_status[processing_id]["result_id"] = result_id
-        processing_status[processing_id][
-            "processed_image_url"] = f"/processed_images/{processed_image_filename}" if processed_image_filename else None
-        processing_status[processing_id][
-            "excel_report_filename"] = excel_filename # <--- MANTENHA ISSO!
-        print(f"[{processing_id}] INFO: Processamento concluído. Status final: {processing_status[processing_id]}")
-
+        result_id = await update_db_processing_status(
+            processing_id=processing_id,
+            status="completed",
+            message=status_message,
+            progress=100,
+            detection_data=detected_objects_data,
+            processed_image_path=str(final_processed_image_path) if final_processed_image_path else None,
+            excel_report_path=str(excel_filepath) if excel_filepath else None,
+        )
+        print(f"[{processing_id}] INFO: Resultados salvos no DB com result_id: {result_id}")
 
     except Exception as e:
         print(f"[{processing_id}] ERRO INESPERADO no processamento da imagem: {e}")
         traceback.print_exc()
+        await update_db_processing_status(
+            processing_id=processing_id,
+            status="failed",
+            message=f"Erro no processamento: {e}",
+            progress=0
+        )
         processing_status[processing_id]["status"] = "failed"
         processing_status[processing_id]["message"] = f"Erro no processamento: {e}"
         processing_status[processing_id]["progress"] = 0
         print(f"[{processing_id}] ERRO: Status de processamento atualizado para failed.")
 
     finally:
+        # AGORA, yolo_saved_dir DEVE SER UM OBJETO Path VÁLIDO OU None,
+        # e a verificação deve ser robusta.
+        if yolo_saved_dir and yolo_saved_dir.exists():
+            try:
+                shutil.rmtree(str(yolo_saved_dir))
+                print(f"[{processing_id}] INFO: Diretório temporário YOLO limpo: {yolo_saved_dir}")
+            except OSError as e:
+                print(f"[{processing_id}] ERRO: Falha ao remover diretório YOLO temporário {yolo_saved_dir}: {e}")
+
         if file_path.exists():
-            os.remove(file_path)
-            print(f"[{processing_id}] INFO: Arquivo temporário original removido: {file_path}")
+            try:
+                os.remove(file_path)
+                print(f"[{processing_id}] INFO: Arquivo temporário original removido: {file_path}")
+            except OSError as e:
+                print(f"[{processing_id}] ERRO: Falha ao remover arquivo original {file_path}: {e}")
+
+        current_db_status = await get_db_processing_status(processing_id)
+        if current_db_status:
+            processing_status[processing_id]["progress"] = current_db_status.progress
+            processing_status[processing_id]["status"] = current_db_status.status
+            processing_status[processing_id]["message"] = current_db_status.message
+            if current_db_status.result:
+                processing_status[processing_id]["result_id"] = current_db_status.result.id
+                processing_status[processing_id]["processed_image_url"] = (
+                    f"/processed_images/{Path(current_db_status.result.processed_image_path).name}"
+                    if current_db_status.result and current_db_status.result.processed_image_path else None
+                )
+                processing_status[processing_id]["excel_report_url"] = (
+                    f"/api/download-excel/{Path(current_db_status.result.excel_report_path).name}"
+                    if current_db_status.result and current_db_status.result.excel_report_path else None
+                )
+        print(f"[{processing_id}] INFO: Processamento concluído. Status final: {processing_status[processing_id]}")
 
 
 @router.post("/upload-image", summary="Faz upload de uma imagem para processamento YOLO")
-async def upload_image(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
-    """
-    Recebe um arquivo de imagem, salva e inicia o processamento em segundo plano.
-    """
+async def upload_image(files: List[UploadFile] = File(...), background_tasks: BackgroundTasks = None):
     if not model_yolo_lixeiras:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Modelo de detecção de lixo não está carregado. Tente novamente mais tarde."
         )
-
-    processing_id = str(uuid.uuid4())
-    original_filename = file.filename
-    file_extension = Path(original_filename).suffix.lower()
-
-    if file_extension not in [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]:
+    if not files:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tipo de arquivo não suportado. Por favor, envie uma imagem (jpg, jpeg, png, gif, bmp, webp)."
+            detail="Nenhuma imagem enviada para processamento."
         )
 
-    temp_upload_dir = PROCESSED_IMAGES_DIR / "temp_uploads"
-    temp_upload_dir.mkdir(parents=True, exist_ok=True)
-    temp_file_path = temp_upload_dir / f"{processing_id}_{original_filename}"
+    batch_id = str(uuid.uuid4())  # Gerar um batch_id para este upload
 
-    try:
-        with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Falha ao salvar o arquivo: {e}")
+    # Crie um registro para o lote no DB
+    await create_db_batch_entry(batch_id=batch_id, total_images=len(files))
 
-    background_tasks.add_task(process_image_task, processing_id, temp_file_path, original_filename)
+    uploaded_files_info = []
+    for file in files:
+        processing_id = str(uuid.uuid4())
+        original_filename = file.filename
+        file_extension = Path(original_filename).suffix.lower()
 
-    return JSONResponse({"processing_id": processing_id, "message": "Upload recebido, processamento iniciado."})
+        if file_extension not in [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]:
+            # Para uploads em lote, você pode pular arquivos inválidos ou levantar erro.
+            # Aqui, vou levantar um erro para o lote inteiro se um arquivo for inválido.
+            # Se quiser continuar, remova este raise e adicione uma mensagem de erro ao info.
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Tipo de arquivo não suportado: {original_filename}. Por favor, envie uma imagem (jpg, jpeg, png, gif, bmp, webp)."
+            )
 
+        temp_upload_dir = PROCESSED_IMAGES_DIR / "temp_uploads"
+        temp_upload_dir.mkdir(parents=True, exist_ok=True)
+        temp_file_path = temp_upload_dir / f"{processing_id}_{original_filename}"
+
+        try:
+            with open(temp_file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Falha ao salvar o arquivo {original_filename}: {e}")
+
+        # Crie um registro para esta imagem no DB ANTES de iniciar a tarefa de background
+        await create_db_processing_entry(
+            processing_id=processing_id,
+            original_filename=original_filename,
+            file_path=str(temp_file_path),  # Salva o caminho temporário
+            batch_processing_id=batch_id
+        )
+
+        background_tasks.add_task(process_image_task, processing_id, temp_file_path, original_filename)
+        uploaded_files_info.append({"processing_id": processing_id, "filename": original_filename})
+
+    return JSONResponse({
+        "batch_id": batch_id,
+        "uploaded_files_info": uploaded_files_info,
+        "message": "Upload recebido, processamento iniciado para todos os arquivos."
+    })
+
+@router.get("/batch-status/{batch_id}", summary="Obtém o status de processamento de um lote de imagens")
+async def get_batch_status(batch_id: str):
+    """
+    Retorna o status geral de um lote de processamento.
+    """
+    batch_info = await get_db_batch_status(batch_id) # Chama a função do database.py
+
+    if not batch_info:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lote não encontrado.")
+
+    # Converte o objeto do banco de dados em um dicionário para a resposta JSON
+    # Isso garante que campos como datetime sejam serializados corretamente
+    response_data = {
+        "batch_id": batch_info.batch_id,
+        "total_images": batch_info.total_images,
+        "processed_images": batch_info.processed_images,
+        "completed_images": batch_info.completed_images,
+        "failed_images": batch_info.failed_images,
+        "overall_progress": batch_info.overall_progress,
+        "overall_status": batch_info.overall_status,
+        "message": batch_info.message,
+        "created_at": batch_info.created_at.isoformat() if batch_info.created_at else None,
+        "images": [] # Pode ser populado com status de imagens individuais, se necessário
+    }
+
+    # OPCIONAL: Se você quiser retornar detalhes de cada imagem no lote junto com o status do lote
+    # Descomente e ajuste conforme a necessidade, mas para resolver o 404 inicial, não é estritamente necessário.
+    # all_images_in_batch = await get_db_all_images_for_batch(batch_id)
+    # for img in all_images_in_batch:
+    #     img_data = {
+    #         "processing_id": img.processing_id,
+    #         "original_filename": img.original_filename,
+    #         "status": img.status,
+    #         "progress": img.progress,
+    #         "message": img.message,
+    #         "result_id": img.result.id if img.result else None
+    #     }
+    #     response_data["images"].append(img_data)
+
+    return JSONResponse(response_data)
 
 @router.get("/processing-status/{processing_id}", summary="Verifica o status do processamento de uma imagem/vídeo")
 async def get_processing_status(processing_id: str):
     """
     Retorna o progresso e o status atual do processamento de uma imagem/vídeo.
     """
-    status_info = processing_status.get(processing_id)
-    if not status_info:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ID de processamento não encontrado.")
+    # Preferimos buscar do DB para ter o status mais atualizado e completo
+    db_status = await get_db_processing_status(processing_id)
+    if not db_status:
+        # Se não encontrou no DB, verifica o status em memória (menos confiável após restart)
+        status_info = processing_status.get(processing_id)
+        if not status_info:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ID de processamento não encontrado.")
+        return JSONResponse(status_info)
 
-    return JSONResponse(status_info)
+    # Converte o objeto DB para um dicionário compatível com o frontend
+    response_data = {
+        "progress": db_status.progress,
+        "status": db_status.status,
+        "message": db_status.message,
+        "result_id": db_status.result.id if db_status.result else None,
+        "processed_image_url": (
+            f"/processed_images/{Path(db_status.result.processed_image_path).name}"
+            if db_status.result and db_status.result.processed_image_path else None
+        ),
+        "excel_report_url": (
+            f"/api/download-excel/{Path(db_status.result.excel_report_path).name}"
+            if db_status.result and db_status.result.excel_report_path else None
+        )
+    }
+    return JSONResponse(response_data)
 
 
 @router.get("/processing-result/{result_id}", summary="Obtém o resultado do processamento de uma imagem/vídeo")
-async def get_processing_result(result_id: int, db: Session = Depends(get_db)):
+async def get_processing_result(result_id: int):  # Removido 'db: Session = Depends(get_db)'
     """
     Retorna a imagem processada e os dados de detecção, incluindo URL para download do Excel.
     """
     try:
-        db_entry = db.query(ImageProcessingResult).filter(ImageProcessingResult.id == result_id).first()
-        if not db_entry:
+        # Usar a função get_db_results que já faz o carregamento e desserialização
+        db_result = await get_db_results(result_id)
+
+        if not db_result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Resultado não encontrado no banco de dados.")
 
         processed_image_url = None
-        if db_entry.processed_filename:
-            processed_image_path = PROCESSED_IMAGES_DIR / db_entry.processed_filename
-            if processed_image_path.exists():
-                processed_image_url = f"/processed_images/{db_entry.processed_filename}"
+        if db_result.processed_image_path:  # Usar o novo campo
+            processed_image_url = f"/processed_images/{Path(db_result.processed_image_path).name}"
 
         excel_report_url = None
-        if db_entry.excel_report_filename: # <--- AGORA VERIFICA O CAMPO DO DB
-            excel_report_url = f"/api/download-excel/{db_entry.excel_report_filename}" # <--- MANTENHA ISSO!
+        if db_result.excel_report_path:  # Usar o novo campo
+            excel_report_url = f"/api/download-excel/{Path(db_result.excel_report_path).name}"
+
+        # original_filename e processing_id são carregados pela função get_db_results
+        original_filename = getattr(db_result, 'original_filename', 'N/A')
+        processing_id = getattr(db_result, 'processing_id', 'N/A')
 
         return JSONResponse({
             "status": "completed",
-            "original_filename": db_entry.original_filename,
+            "original_filename": original_filename,
+            "processing_id": processing_id,  # Pode ser útil
             "processed_image_url": processed_image_url,
-            "excel_report_url": excel_report_url, # <--- MANTENHA ISSO!
-            "detection_data": db_entry.detection_data
+            "excel_report_url": excel_report_url,
+            "detection_data": db_result.detection_data  # Já deve vir desserializado
         })
     except Exception as e:
         print(f"Erro no endpoint get_processing_result: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro interno do servidor: {e}")
+        # Retorna o erro 500 para o cliente, mas evita expor detalhes internos.
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Erro interno do servidor ao obter resultados.")
 
 
 # --- NOVO ENDPOINT: Rota para download do arquivo XLSX ---
@@ -287,4 +440,5 @@ async def download_excel_report(file_name: str):
     if not file_path.suffix.lower() == '.xlsx':
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tipo de arquivo inválido.")
 
-    return FileResponse(path=file_path, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=file_name)
+    return FileResponse(path=file_path, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        filename=file_name)

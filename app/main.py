@@ -1,28 +1,19 @@
 # app/main.py
 import uvicorn
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pathlib import Path
+from typing import Optional # Importar Optional para parâmetros opcionais
 
 # Importar seus routers/endpoints
 from app.api.endpoints import image_comparation
 
-from app.core.database import ( # CORRIGIDO: Aponta para o novo caminho do módulo de DB
+from app.core.database import (
     create_db_and_tables,
-    create_db_batch_entry,
-    get_db_batch_status,
-    update_db_batch_status,
-    create_db_processing_entry,
-    get_db_processing_status,
-    update_db_processing_status,
-    get_db_results,
-    get_db_all_images_for_batch,
     SessionLocal,
-    ImageProcessing,
-    ImageProcessingResult
 )
 
 # Cria a aplicação FastAPI
@@ -60,38 +51,42 @@ async def startup_event():
     print("Database tables checked/created.")
 
 
-# Rotas
+# --- ROTAS DE SERVIÇO DE PÁGINAS HTML ---
 
-# Rota raiz ("/") - Assume que você quer que a página de upload seja a primeira
+# Rota raiz ("/") - Redireciona para a página de upload
 @app.get("/", response_class=HTMLResponse, summary="Página inicial (Upload)")
-async def read_root():
+async def read_root(request: Request):
     """Redireciona para a página HTML principal de upload de imagem."""
-    with open(STATIC_DIR / "painel_upload.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    return templates.TemplateResponse("painel_upload.html", {"request": request})
 
 # Rota para a página de upload
 @app.get("/painel_upload", response_class=HTMLResponse, summary="Página de upload")
-async def read_upload_page():
+async def read_upload_page(request: Request):
     """Retorna a página HTML de upload de imagem."""
-    with open(STATIC_DIR / "painel_upload.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    return templates.TemplateResponse("painel_upload.html", {"request": request})
 
-# Rota para a página de espera
-# ATENÇÃO: ROTA AGORA É "/painel-espera" (com hífen)
-@app.get("/painel-espera", response_class=HTMLResponse, summary="Página de espera de processamento")
-async def read_wait_page():
-    """Retorna a página HTML de espera."""
-    with open(STATIC_DIR / "painel_espera.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+# Rota para a página de espera (agora com batch_id OPCIONAL)
+# Esta rota atenderá tanto "/painel_espera" quanto "/painel_espera?batch_id=..."
+@app.get("/painel_espera", response_class=HTMLResponse, summary="Página de espera de processamento")
+async def read_wait_page(request: Request, batch_id: Optional[str] = None):
+    """Retorna a página HTML de espera, com batch_id opcional."""
+    # O valor de batch_id será None se não for fornecido na URL.
+    # O JavaScript no frontend (script_espera.js) será responsável por verificar
+    # a presença do batch_id e gerenciar o redirecionamento se ele não existir.
+    return templates.TemplateResponse("painel_espera.html", {"request": request})
+
 
 # Rota para a página de resultados
-# ATENÇÃO: ROTA AGORA É "/painel_resultados" (com 's' no final)
 @app.get("/painel_resultados", response_class=HTMLResponse, summary="Página de resultados")
-async def read_results_page():
+async def read_results_page(request: Request):
     """Retorna a página HTML de resultados."""
-    with open(STATIC_DIR / "painel_resultados.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    return templates.TemplateResponse("painel_resultados.html", {"request": request})
 
 
 # Incluir os routers/endpoints da API
 app.include_router(image_comparation.router, prefix="/api", tags=["Image Processing"])
+
+# Se você roda o app via `python main.py` diretamente, descomente o bloco abaixo.
+# Se você usa `uvicorn app.main:app --reload`, não precisa.
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
