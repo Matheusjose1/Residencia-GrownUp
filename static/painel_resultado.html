@@ -15,9 +15,10 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="/painel_upload" class="active">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/painel_espera">PAINEL DE ESPERA</a></li>
-                    <li><a href="/painel_resultados">PAINEL DE RESULTADO</a></li> </ul>
+                    <li><a href="/static/painel_upload.html" class="active">PAINEL DE UPLOAD</a></li>
+                    <li><a href="/static/painel_espera.html">PAINEL DE ESPERA</a></li>
+                    <li><a href="/static/painel_resultado.html">PAINEL DE RESULTADO</a></li>
+                </ul>
             </nav>
         </div>
     </header>
@@ -25,29 +26,22 @@
     <main>
         <h2>Arquivo processado<span class="icon-check"><img src="/static/images/iconcorrect.svg" alt=""></span></h2>
 
-        <div class="carrossel-container">
-            <button class="carrossel-btn prev-btn">&lt;</button>
-            <ul class="carrossel" id="originalImagesCarrossel">
-                </ul>
+        <div class="carrossel-container" id="carrosselContainer"> <button class="carrossel-btn prev-btn">&lt;</button>
+            <ul class="carrossel" id="carrosselImages"> </ul>
             <button class="carrossel-btn next-btn">&gt;</button>
         </div>
 
         <div class="result-details">
             <div class="diagnostico">
-                <h2>ID: <span id="resultIdDisplay">#2698473</span></h2>
-                <h2>Tipo: <span id="resultTypeDisplay">Volumoso</span></h2>
-                <h2>Data: <span id="resultDateDisplay">27/05/2025</span></h2>
-                <h2>Precisão do modelo: <span id="modelAccuracyDisplay">60%</span></h2>
-            </div>
-            
-            <div class="buttons">
-                <button class="btn btn-blue" id="downloadZipButton">Baixar arquivo (ZIP)</button>
-                <button class="btn btn-gray" onclick="window.location.href='/painel_upload'">Criar novo<span><img src="/static/images/plus.svg" alt=""></span></button>
-            </div>
+                <h2>ID: <span id="processingId"></span></h2>      <h2>Tipo: <span id="mainObjectType"></span></h2>   <h2>Data: <span id="processingDate"></span></h2>   </div>
+            <div id="resultsContent">
+                </div>
         </div>
     </main>
 
-    <footer></footer>
-    <script src="/static/scripts/script_resultado.js"></script>
-    <script src="/static/scripts/carrossel.js"></script> </body>
+    <footer>
+        <p>&copy; 2024 TPF Engenharia. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="/static/scripts/script_resultado.js"></script> <script src="/static/scripts/processing_api.js"></script> </body>
 </html>
