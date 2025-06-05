@@ -1,45 +1,50 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload de Imagem - Análise de Resíduos</title>
-    <link rel="stylesheet" href="/static/styles/global.css"> 
-    <link rel="stylesheet" href="/static/styles/painel_upload.css">
-    <script src="/static/scripts/api-integration.js" defer></script>
-    <script src="/static/scripts/script_upload.js" defer></script>
+    <title>Upload Screen</title>
+    <link rel="stylesheet" href="/static/styles/upload.css">
 </head>
 <body>
-    <div class="container">
-        <header>
+    <header>
+        <div class="container">
             <div class="logo">
-                <img src="/static/images/logo.png" alt="TPF Logo">
+                <img src="/static/images/logo.svg" alt="TPF Logo">
             </div>
             <nav>
                 <ul>
-                    <li><a href="/painel_upload" class="nav-link active">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/painel_espera" class="nav-link">PAINEL DE ESPERA</a></li>
-                    <li><a href="/painel_resultados" class="nav-link">PAINEL DE RESULTADO</a></li>
+                    <li><a href="/static/painel_upload.html" class="active">PAINEL DE UPLOAD</a></li>
+                    <li><a href="/static/painel_espera.html">PAINEL DE ESPERA</a></li>
+                    <li><a href="/static/painel_resultado.html">PAINEL DE RESULTADO</a></li>
                 </ul>
             </nav>
-        </header>
+        </div>
+    </header>
+    <main>
+        <h2>Processamento de Imagem com IA</h2>
+        <p>Faça upload da sua imagem com o texto para análise com nossa inteligência artificial.</p>
 
-        <main>
-            <div class="upload-panel">
-                <h2>Faça o Upload da Imagem</h2>
-                <div class="drop-area" id="dropArea">
-                    <div class="preview-container" id="previewContainer"></div> 
-                    <p id="dropText">Arraste e solte seu arquivo aqui ou clique para selecionar</p>
-                    <input type="file" id="imageInput" accept="image/*,video/*" multiple style="display: none;">
-                    <p id="file-name"></p>
-                </div>
-                <button id="selectImagesButton" class="button">Selecionar Imagens</button>
-                <span id="selectedImagesCount" class="file-info">Nenhuma imagem selecionada.</span>
-                <button class="button" id="processImagesButton" disabled>Processar Arquivo</button>
-                <div id="message" class="message" style="display: none;"></div>
+        <div class="upload-container">
+            <div class="upload-area" id="drop-area">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5l7-7 7 7zM5 18v2h14v-2H5z"/>
+                </svg>
+                <p>Solte a imagem com o texto aqui</p>
+                <input type="file" id="file-input" multiple>
             </div>
-        </main>
-    </div>
+            <div id="file-name"></div>
 
-    </body>
+            <div class="separator">OU</div>
+
+            <label for="file-input" class="select-button">Selecione o(s) arquivo(s)</label>
+            <p class="supported-formats">Formatos suportados: PNG, JPG, JPEG, TXT</p>
+
+            <button class="process-button" id="process-button" disabled>Realizar Processamento</button>
+        </div>
+    </main>
+    <footer></footer>
+</body>
+<script src="/static/scripts/api-integration.js"></script>
+<script src="/static/scripts/script_upload.js"></script>
 </html>

@@ -1,79 +1,49 @@
-// static/script_upload.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const imageInput = document.getElementById('imageInput');
-    const selectImagesButton = document.getElementById('selectImagesButton');
-    const processImagesButton = document.getElementById('processImagesButton');
-    const selectedImagesCount = document.getElementById('selectedImagesCount');
-    const messageDiv = document.getElementById('message');
+    const imageInput = document.getElementById('file-input'); // input real do HTML
+    const processButton = document.getElementById('process-button'); // botão real do HTML
+    const fileNameDisplay = document.getElementById('file-name'); // div que mostra nome dos arquivos
 
-    let selectedFiles = []; // Armazenará os arquivos selecionados
+    let selectedFiles = [];
 
-    // Abre o seletor de arquivos quando o botão "Selecionar Imagens" é clicado
-    selectImagesButton.addEventListener('click', () => {
-        imageInput.click();
-    });
-
-    // Lida com a mudança no input de arquivo (quando arquivos são selecionados)
     imageInput.addEventListener('change', (event) => {
-        selectedFiles = Array.from(event.target.files); // Converte FileList para Array
+        selectedFiles = Array.from(event.target.files);
         updateSelectedFilesDisplay();
         validateFiles();
     });
 
-    // Lida com o clique no botão "Processar Imagens"
-    processImagesButton.addEventListener('click', async () => {
+    processButton.addEventListener('click', async () => {
         if (selectedFiles.length > 0) {
-            processImagesButton.disabled = true; // Desabilita para evitar múltiplos cliques
-            selectImagesButton.disabled = true; // Desabilita o botão de seleção
-            showMessage("Enviando imagens para processamento...", "info");
-            
+            processButton.disabled = true;
+            fileNameDisplay.textContent = "Enviando imagens para o servidor...";
+
             try {
-                // 'uploadImagesBatch' é uma função definida em 'api-integration.js'
-                const batchId = await uploadImagesBatch(selectedFiles); 
+                const batchId = await uploadImagesBatch(selectedFiles); // Chama a função da api-integration.js
                 if (batchId) {
-                    // Redireciona para o painel de espera com o batch_id
                     window.location.href = `/painel_espera?batch_id=${batchId}`;
                 } else {
-                    showMessage("Erro ao iniciar o processamento em lote.", "error");
-                    processImagesButton.disabled = false;
-                    selectImagesButton.disabled = false;
+                    fileNameDisplay.textContent = "Erro ao iniciar o processamento.";
+                    processButton.disabled = false;
                 }
             } catch (error) {
-                console.error("Erro no upload do lote:", error);
-                showMessage("Erro inesperado ao processar imagens. Tente novamente.", "error");
-                processImagesButton.disabled = false;
-                selectImagesButton.disabled = false;
+                console.error(error);
+                fileNameDisplay.textContent = "Erro ao enviar as imagens. Tente novamente.";
+                processButton.disabled = false;
             }
-        } else {
-            showMessage("Por favor, selecione pelo menos uma imagem para processar.", "error");
         }
     });
 
-    // Atualiza o texto exibindo a contagem de arquivos selecionados
     function updateSelectedFilesDisplay() {
         if (selectedFiles.length === 0) {
-            selectedImagesCount.textContent = "Nenhuma imagem selecionada.";
+            fileNameDisplay.textContent = "Nenhuma imagem selecionada.";
         } else if (selectedFiles.length === 1) {
-            selectedImagesCount.textContent = `1 imagem selecionada: ${selectedFiles[0].name}`;
+            fileNameDisplay.textContent = `1 imagem selecionada: ${selectedFiles[0].name}`;
         } else {
-            selectedImagesCount.textContent = `${selectedFiles.length} imagem(ns) selecionada(s).`;
+            fileNameDisplay.textContent = `${selectedFiles.length} imagens selecionadas.`;
         }
     }
 
-    // Valida se há arquivos selecionados para habilitar o botão de processamento
     function validateFiles() {
-        if (selectedFiles.length > 0) {
-            processImagesButton.disabled = false;
-        } else {
-            processImagesButton.disabled = true;
-        }
-    }
-
-    // Exibe mensagens para o usuário
-    function showMessage(text, type) {
-        messageDiv.textContent = text;
-        messageDiv.className = `message ${type}`; // Adiciona classe para estilização (info, error)
-        messageDiv.style.display = 'block';
+        processButton.disabled = selectedFiles.length === 0;
     }
 });

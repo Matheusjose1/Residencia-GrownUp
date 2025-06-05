@@ -1,0 +1,190 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background-color: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh; /* Ensure body takes full viewport height */
+}
+
+header {
+    background-color: #fff;
+    width: 100%;
+    padding: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center; /* Center content horizontally */
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between; /* Space out logo and nav */
+    align-items: center;
+    width: 90%; /* Control content width */
+    max-width: 1200px; /* Max width for larger screens */
+}
+
+.logo img {
+    height: 50px;
+    width: auto;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+nav li {
+    margin-left: 30px; /* Use margin-left for spacing between nav items */
+}
+
+nav a {
+    margin-left: 30px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+nav a.active {
+    color: #2688ff;
+    border-bottom: 2px solid #2688ff;
+    padding-bottom: 4px;
+}
+
+main {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+    text-align: center;
+    width: 90%; /* Make it more responsive */
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Ensure container takes full width of main */
+}
+
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    padding: 40px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    width: calc(100% - 80px); /* Adjust width for padding */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.upload-area svg {
+    width: 50px;
+    height: 50px;
+    fill: #ccc;
+    margin-bottom: 10px;
+}
+
+.upload-area p {
+    color: #777;
+    margin: 0; /* Remove default margin for paragraphs */
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+.separator {
+    color: #ccc;
+    margin: 20px 0;
+}
+
+.select-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+    display: inline-block; /* Treat label as a block for padding */
+}
+
+.select-button:hover {
+    background-color: #0056b3;
+}
+
+.supported-formats {
+    color: #999;
+    font-size: 0.9em;
+    margin-top: 0; /* Adjust spacing */
+    margin-bottom: 20px;
+}
+
+.process-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+.process-button:disabled {
+    background-color: #a0a0a0; /* Grey out when disabled */
+    cursor: not-allowed;
+}
+
+.process-button:hover:enabled { /* Apply hover only when enabled */
+    background-color: #0056b3;
+}
+
+#file-name {
+    margin-top: 10px;
+    color: #555;
+    font-size: 0.9em;
+    word-break: break-all; /* Prevent long file names from overflowing */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    nav ul {
+        margin-top: 15px;
+        flex-wrap: wrap; /* Allow navigation items to wrap */
+        justify-content: center;
+    }
+
+    nav li {
+        margin: 10px 15px; /* Adjust spacing for smaller screens */
+    }
+
+    main {
+        margin-top: 30px;
+        padding: 20px;
+    }
+
+    .upload-area {
+        padding: 20px;
+    }
+}

@@ -1,7 +1,10 @@
+# app/api/endpoints/image_comparation.py
+
 import uuid
 import os
 import shutil
 import json
+import zipfile # Adicionado: Importar a biblioteca zipfile
 from typing import Dict, List, Any
 from fastapi import APIRouter, File, UploadFile, BackgroundTasks, HTTPException, status, Depends
 from fastapi.responses import JSONResponse, FileResponse
@@ -11,12 +14,10 @@ import traceback
 
 from app.core.database import (
     SessionLocal,
-    create_db_and_tables,
     get_db,
     ImageProcessingResult,
     BatchProcessing,
     ImageProcessing,
-    # Funções assíncronas do DB
     update_db_processing_status,
     get_db_processing_status,
     create_db_processing_entry,
@@ -29,7 +30,7 @@ from app.core.database import (
 # Importar configurações e modelo YOLO
 from app.core.config import PROCESSED_IMAGES_DIR, YOLO_CLASSES, model_yolo_lixeiras, XLSX_RESULTS_DIR
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session # Mantenha a importação de Session
 
 router = APIRouter()
 
@@ -89,12 +90,11 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
 
         processing_status[processing_id]["progress"] = 30
         processing_status[processing_id]["message"] = "Executando detecção de objetos..."
-        # CORREÇÃO: Ajuste no progress e mensagem para este estágio
         await update_db_processing_status(
             processing_id=processing_id,
             status="in_progress",
-            progress=30, # Ajustado para 30
-            message="Executando detecção de objetos..." # Mensagem mais apropriada
+            progress=30,
+            message="Executando detecção de objetos..."
         )
 
         print(f"[{processing_id}] INFO: Chamando model_yolo_lixeiras.predict() com source: {file_path}")
@@ -113,7 +113,6 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
 
         processing_status[processing_id]["progress"] = 70
         processing_status[processing_id]["message"] = "Analisando resultados e preparando dados..."
-        # CORREÇÃO: Adicionado esta chamada faltante que estava movida para o lugar errado
         await update_db_processing_status(
             processing_id=processing_id,
             status="in_progress",
@@ -200,7 +199,7 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
         traceback.print_exc()
         await update_db_processing_status(
             processing_id=processing_id,
-            status="failed", # CORREÇÃO: Garantindo que o status seja 'failed' aqui
+            status="failed",
             message=f"Erro no processamento: {e}",
             progress=0
         )
@@ -217,12 +216,15 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
             except OSError as e:
                 print(f"[{processing_id}] ERRO: Falha ao remover diretório YOLO temporário {yolo_saved_dir}: {e}")
 
-        if file_path.exists():
-            try:
-                os.remove(file_path)
-                print(f"[{processing_id}] INFO: Arquivo temporário original removido: {file_path}")
-            except OSError as e:
-                print(f"[{processing_id}] ERRO: Falha ao remover arquivo original {file_path}: {e}")
+        # Comentado para depuração, você pode querer manter os arquivos originais
+        # para exibição no carrossel. Se os arquivos originais forem movidos
+        # para um local permanente no upload, esta remoção pode ser desejável.
+        # if file_path.exists():
+        #     try:
+        #         os.remove(file_path)
+        #         print(f"[{processing_id}] INFO: Arquivo temporário original removido: {file_path}")
+        #     except OSError as e:
+        #         print(f"[{processing_id}] ERRO: Falha ao remover arquivo original {file_path}: {e}")
 
         current_db_status = await get_db_processing_status(processing_id)
         if current_db_status:
@@ -260,6 +262,11 @@ async def upload_image(files: List[UploadFile] = File(...), background_tasks: Ba
     await create_db_batch_entry(batch_id=batch_id, total_images=len(files))
 
     uploaded_files_info = []
+    # O diretório para uploads temporários de imagens originais, montado em main.py
+    # PROCESSED_IMAGES_DIR = Path("data/output/imagens_processadas")
+    TEMP_UPLOADS_DIR = PROCESSED_IMAGES_DIR / "temp_uploads"
+    TEMP_UPLOADS_DIR.mkdir(parents=True, exist_ok=True) # Garante que o diretório exista
+
     for file in files:
         processing_id = str(uuid.uuid4())
         original_filename = file.filename
@@ -271,9 +278,8 @@ async def upload_image(files: List[UploadFile] = File(...), background_tasks: Ba
                 detail=f"Tipo de arquivo não suportado: {original_filename}. Por favor, envie uma imagem (jpg, jpeg, png, gif, bmp, webp)."
             )
 
-        temp_upload_dir = PROCESSED_IMAGES_DIR / "temp_uploads"
-        temp_upload_dir.mkdir(parents=True, exist_ok=True)
-        temp_file_path = temp_upload_dir / f"{processing_id}_{original_filename}"
+        # Salva o arquivo original no diretório temporário de uploads
+        temp_file_path = TEMP_UPLOADS_DIR / f"{processing_id}_{original_filename}"
 
         try:
             with open(temp_file_path, "wb") as buffer:
@@ -285,7 +291,7 @@ async def upload_image(files: List[UploadFile] = File(...), background_tasks: Ba
         await create_db_processing_entry(
             processing_id=processing_id,
             original_filename=original_filename,
-            file_path=str(temp_file_path),
+            file_path=str(temp_file_path), # Salva o caminho onde o arquivo original está
             batch_processing_id=batch_id
         )
 
@@ -353,12 +359,12 @@ async def get_processing_status(processing_id: str):
 
 
 @router.get("/processing-result/{result_id}", summary="Obtém o resultado do processamento de uma imagem/vídeo")
-async def get_processing_result(result_id: int):
+async def get_processing_result(result_id: int, db: Session = Depends(get_db)):
     """
-    Retorna a imagem processada e os dados de detecção, incluindo URL para download do Excel.
+    Retorna a imagem processada e os dados de detecção, incluindo URL para download do Excel e URLs das imagens originais.
     """
     try:
-        db_result = await get_db_results(result_id)
+        db_result = await get_db_results(result_id, db)
 
         if not db_result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -372,24 +378,51 @@ async def get_processing_result(result_id: int):
         if db_result.excel_report_path:
             excel_report_url = f"/api/download-excel/{Path(db_result.excel_report_path).name}"
 
-        original_filename = getattr(db_result, 'original_filename', 'N/A')
-        processing_id = getattr(db_result, 'processing_id', 'N/A')
+        # Obtendo o original_filename e processing_id através do relacionamento
+        original_filename = "N/A"
+        processing_id = "N/A"
+        if db_result.image_processing_entry:
+            original_filename = db_result.image_processing_entry.original_filename
+            processing_id = db_result.image_processing_entry.processing_id
+
+        # --- LÓGICA PARA OBTER AS IMAGENS ORIGINAIS DO LOTE ---
+        original_image_urls = []
+        # Acessa o batch_id através do relacionamento image_processing_entry
+        if db_result.image_processing_entry and db_result.image_processing_entry.batch_processing_id:
+            batch_id = db_result.image_processing_entry.batch_processing_id
+            batch_images = await get_db_all_images_for_batch(batch_id, db)
+            for img_entry in batch_images:
+                # O caminho original foi salvo em `file_path` no `create_db_processing_entry`
+                # e aponta para o diretório `TEMP_UPLOADS_DIR`.
+                # Precisamos construir a URL pública para essa imagem.
+                original_image_name = Path(img_entry.file_path).name
+                # A URL pública é /temp_uploads/nome_do_arquivo.ext
+                original_image_urls.append(f"/temp_uploads/{original_image_name}")
+        else:
+            print(f"AVISO: Não foi possível obter batch_id para result_id {result_id}. Carrossel de originais pode estar vazio.")
+
 
         return JSONResponse({
+            "id": result_id,
+            "type": "Volumoso", # Exemplo de tipo, ajuste conforme seu modelo
+            "date": "04/06/2025", # Exemplo de data, pode ser dinâmico da DB
+            "model_accuracy": 0.85, # Exemplo de precisão, pode ser dinâmico da DB
             "status": "completed",
             "original_filename": original_filename,
             "processing_id": processing_id,
             "processed_image_url": processed_image_url,
             "excel_report_url": excel_report_url,
-            "detection_data": db_result.detection_data
+            "detection_data": db_result.detection_data,
+            "original_image_urls": original_image_urls, # NOVO: URLs das imagens originais
+            "zip_download_url": f"/api/download-zip/{result_id}" # Adicionado para o botão ZIP
         })
     except Exception as e:
         print(f"Erro no endpoint get_processing_result: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Erro interno do servidor ao obter resultados.")
 
-
-# --- NOVO ENDPOINT: Rota para download do arquivo XLSX ---
+# --- Rota para download do arquivo XLSX (existente no seu OpenAPI) ---
 @router.get("/download-excel/{file_name}", summary="Faz download de um arquivo de relatório Excel")
 async def download_excel_report(file_name: str):
     """
@@ -401,7 +434,60 @@ async def download_excel_report(file_name: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo Excel não encontrado.")
 
     if not file_path.suffix.lower() == '.xlsx':
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tipo de arquivo inválido.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tipo de arquivo inválido. Apenas arquivos .xlsx são suportados para download direto desta rota.")
 
-    return FileResponse(path=file_path, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        filename=file_name)
+    return FileResponse(path=file_path, filename=file_name, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+# --- NOVO ENDPOINT: Rota para download do arquivo ZIP ---
+@router.get("/download-zip/{result_id}", summary="Faz download de um arquivo ZIP de resultados", tags=["Image Processing"])
+async def download_zip_report(result_id: int, db: Session = Depends(get_db)):
+    """
+    Permite o download de um arquivo ZIP contendo imagens originais, processadas e relatórios.
+    """
+    db_result = await get_db_results(result_id, db)
+
+    if not db_result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resultado não encontrado.")
+
+    zip_file_name = f"results_{result_id}.zip"
+    # Crie um diretório temporário para o ZIP se ainda não existir
+    temp_zip_dir = Path("data/temp_zips") # Ou defina isso em app.core.config
+    temp_zip_dir.mkdir(parents=True, exist_ok=True)
+    zip_file_path = temp_zip_dir / zip_file_name
+
+    try:
+        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Adicionar imagem processada
+            if db_result.processed_image_path and Path(db_result.processed_image_path).exists():
+                zipf.write(db_result.processed_image_path, Path(db_result.processed_image_path).name)
+
+            # Adicionar relatório Excel
+            if db_result.excel_report_path and Path(db_result.excel_report_path).exists():
+                zipf.write(db_result.excel_report_path, Path(db_result.excel_report_path).name)
+
+            # Adicionar imagens originais associadas ao lote
+            if db_result.image_processing_entry and db_result.image_processing_entry.batch_processing_id:
+                batch_id = db_result.image_processing_entry.batch_processing_id
+                batch_images = await get_db_all_images_for_batch(batch_id, db)
+                for img_entry in batch_images:
+                    original_file_path = Path(img_entry.file_path) # Caminho salvo no DB
+                    if original_file_path.exists():
+                        zipf.write(original_file_path, original_file_path.name) # Adiciona ao ZIP com o nome do arquivo
+            else:
+                print(f"AVISO: Não foi possível encontrar imagens originais para o result_id {result_id} ou seu lote para inclusão no ZIP.")
+
+
+        return FileResponse(path=zip_file_path, filename=zip_file_name, media_type="application/zip",
+                            headers={"Content-Disposition": f"attachment; filename={zip_file_name}"})
+    except Exception as e:
+        print(f"Erro ao criar arquivo ZIP para result_id {result_id}: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Erro ao gerar arquivo ZIP.")
+    finally:
+        # É uma boa prática remover arquivos temporários após o envio.
+        # Você pode usar um `try-finally` para garantir a remoção, ou um sistema de limpeza.
+        # Por exemplo, pode agendar a remoção do arquivo ZIP após um curto atraso.
+        # shutil.rmtree(zip_file_path) # CUIDADO: Isso irá deletar o arquivo ZIP imediatamente.
+        pass # Por enquanto, o arquivo permanece no disco para depuração.
