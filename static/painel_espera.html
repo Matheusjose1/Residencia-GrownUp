@@ -3,51 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Espera - Análise de Imagem</title>
+    <title>Painel de Espera - Análise de Resíduos</title>
     <link rel="stylesheet" href="/static/styles/espera.css">
 </head>
 <body>
     <header>
         <div class="container">
-            <div class="logo">
-                <img src="/static/images/logo.png" alt="TPF Logo">
-            </div>
+            <h1 class="logo">Análise de Resíduos com IA</h1>
             <nav>
                 <ul>
-                    <li><a href="/static/painel_upload.html" class="active">PAINEL DE UPLOAD</a></li>
-                    <li><a href="/static/painel_espera.html">PAINEL DE ESPERA</a></li>
-                    <li><a href="/static/painel_resultado.html">PAINEL DE RESULTADO</a></li>
+                    <li><a href="/painel_upload">Upload</a></li>
+                    <li><a href="/painel_espera" class="active">Espera</a></li>
+                    <li><a href="/painel_resultados">Resultados</a></li>
                 </ul>
             </nav>
         </div>
     </header>
-    <main>
-        <div class="processing-panel">
-            <h2>O vídeo está sendo processado</h2>
-            
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-            </div>
-            
-            <p class="processing-message">
-                Nossa inteligência artificial está analisando seu conteúdo.<br>
-                Isso pode levar alguns minutos.
-            </p>
-            
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+
+    <main class="container">
+        <section class="processing-panel">
+            <h2>Monitoramento de Processamento em Lote</h2>
+            <div id="statusMessage" class="message" style="display: none;"></div>
+            <div id="instructionsMessage" class="message info" style="display: none;">
                 </div>
-                <div class="progress-text">Analisando o conteúdo do vídeo...</div>
+
+            <div class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Preparando o processamento...</p>
             </div>
-            
-            <div class="info-box">
-                <span class="info-icon">ℹ️</span>
-                <p class="info-text">O processamento pode variar de acordo com o tamanho e complexidade do vídeo. Por favor, não feche esta janela.</p>
+
+            <div class="processing-message" style="display: none;">
+                <p>Nossa inteligência artificial está processando suas imagens. Por favor, aguarde.</p>
+                <p>Você pode acompanhar o progresso abaixo.</p>
             </div>
-        </div>
+
+            <div class="progress-bar-container" style="display: none;">
+                <div class="progress-bar-label">Progresso do Lote: <span id="batchProgressText">0%</span></div>
+                <div class="progress-bar-bg">
+                    <div id="batchProgressFill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+
+            <div class="batch-summary" style="display: none;">
+                <h3>Resumo do Lote</h3>
+                <p>Imagens no lote: <span id="totalImages">0</span></p>
+                <p>Imagens processadas (completas/falhas): <span id="processedImages">0</span></p>
+                <ul>
+                    <li>Concluídas com Sucesso: <span id="completedImages">0</span></li>
+                    <li>Com Falha: <span id="failedImages">0</span></li>
+                </ul>
+            </div>
+
+            <div class="image-list-container" style="display: none;">
+                <h3>Status das Imagens</h3>
+                <ul id="imageList" class="image-status-list">
+                    </ul>
+            </div>
+
+            <div class="info-box" style="display: none;">
+                <i class="fas fa-info-circle"></i>
+                <p>Por favor, não feche ou recarregue esta janela até que o processamento seja concluído. Isso pode interromper o processo.</p>
+            </div>
+        </section>
     </main>
-    <footer></footer> <script src="/static/scripts/api-integration.js"></script>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Análise de Resíduos com IA. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
     <script src="/static/scripts/script_espera.js"></script>
-</body>
+    </body>
 </html>

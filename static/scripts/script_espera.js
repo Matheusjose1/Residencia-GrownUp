@@ -1,56 +1,116 @@
 // static/script_espera.js
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // Instancia a classe ProcessingAPI
-    const processingAPI = new ProcessingAPI(); // Certifique-se que esta classe está definida em api.js
-
-    // Elementos DOM para o status do lote
-    const batchStatusMessage = document.getElementById('batchStatusMessage');
-    const batchProgressFill = document.getElementById('batchProgressFill');
-    const batchProgressText = document.getElementById('batchProgressText');
-    const totalImagesSpan = document.getElementById('totalImages');
-    const processedImagesSpan = document.getElementById('processedImages');
-    const completedImagesSpan = document.getElementById('completedImages');
-    const failedImagesSpan = document.getElementById('failedImages');
-    const imageList = document.getElementById('imageList'); // Para listar o status de cada imagem
-    const mainElement = document.querySelector('main'); // Usado para adicionar a mensagem inicial
-
-    // Elementos que podem precisar ser escondidos/mostrados
-    const loadingSpinner = document.querySelector('.loading-spinner');
-    const progressBarContainer = document.querySelector('.progress-bar-container');
-    const processingMessage = document.querySelector('.processing-message');
-    const batchSummaryContainer = document.querySelector('.batch-summary');
-    const imageListContainer = document.querySelector('.image-list-container');
-    const infoBox = document.querySelector('.info-box');
+    // ... (Seus elementos DOM e variáveis existentes) ...
 
     let statusCheckInterval; // Variável para armazenar o ID do setInterval
-    const pollInterval = 3000; // Intervalo de 3 segundos para consultar a API
+    let currentBatchId = new URLSearchParams(window.location.search).get('batch_id');
+    let hasRedirected = false; // Flag para evitar múltiplos redirecionamentos
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const batchId = urlParams.get('batch_id');
-
-    // Função para mostrar a interface de processamento e esconder a mensagem de instrução
-    function showProcessingUI() {
-        if (loadingSpinner) loadingSpinner.style.display = 'block';
-        if (progressBarContainer) progressBarContainer.style.display = 'block';
-        if (processingMessage) processingMessage.style.display = 'block';
-        if (batchSummaryContainer) batchSummaryContainer.style.display = 'block';
-        if (imageListContainer) imageListContainer.style.display = 'block';
-        if (infoBox) infoBox.style.display = 'block';
-
-        const instructionsDiv = document.getElementById('instructionsMessage');
-        if (instructionsDiv) instructionsDiv.style.display = 'none';
+    // Função para mostrar mensagens de erro/sucesso (se você tiver uma)
+    function displayMessage(message, type = 'info') {
+        const messageDiv = document.getElementById('statusMessage') || document.createElement('div');
+        messageDiv.id = 'statusMessage';
+        messageDiv.className = `message ${type}`;
+        messageDiv.innerHTML = message;
+        if (!messageDiv.parentNode) {
+            document.querySelector('.processing-panel').prepend(messageDiv);
+        }
+        messageDiv.style.display = 'block';
     }
 
-    // Função para mostrar a mensagem de instrução e esconder a interface de processamento
-    function showInstructionsUI() {
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (progressBarContainer) progressBarContainer.style.display = 'none';
-        if (processingMessage) processingMessage.style.display = 'none';
-        if (batchSummaryContainer) batchSummaryContainer.style.display = 'none';
-        if (imageListContainer) imageListContainer.style.display = 'none';
-        if (infoBox) infoBox.style.display = 'none';
+    // Função principal para verificar o status do lote
+    async function updateBatchStatus() {
+        if (!currentBatchId || hasRedirected) {
+            // Se não tem batch_id ou já redirecionou, para a verificação
+            showNoBatchInstructions();
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            return;
+        }
 
+        try {
+            const response = await fetch(`/api/batch-status/${currentBatchId}`);
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+            const batchData = await response.json();
+            console.log('Dados do Lote recebidos:', batchData);
+
+            // Atualiza os elementos visuais
+            totalImagesSpan.textContent = batchData.total_images;
+            processedImagesSpan.textContent = batchData.processed_images;
+            completedImagesSpan.textContent = batchData.completed_images;
+            failedImagesSpan.textContent = batchData.failed_images;
+
+            const progress = (batchData.processed_images / batchData.total_images) * 100;
+            batchProgressFill.style.width = `${progress}%`;
+            batchProgressText.textContent = `${Math.round(progress)}%`;
+
+            // Mostra os containers relevantes
+            loadingSpinner.style.display = 'none';
+            progressBarContainer.style.display = 'block';
+            processingMessage.style.display = 'block';
+            batchSummaryContainer.style.display = 'block';
+            imageListContainer.style.display = 'block';
+            infoBox.style.display = 'block';
+
+            // Atualiza a lista de imagens
+            imageList.innerHTML = ''; // Limpa a lista existente
+            if (batchData.images && Array.isArray(batchData.images)) {
+                batchData.images.forEach(image => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${image.original_filename}</span>
+                        <span class="status ${image.status}">${image.status}</span>
+                        ${image.status === 'completed' && image.processed_image_url ?
+                            `<a href="${image.processed_image_url}" target="_blank" class="view-link" title="Ver Imagem Processada">
+                                <i class="fas fa-eye"></i>
+                             </a>` : ''
+                        }
+                        ${image.status === 'completed' && image.excel_report_url ?
+                            `<a href="${image.excel_report_url}" target="_blank" class="download-link" title="Baixar Relatório Excel">
+                                <i class="fas fa-file-excel"></i>
+                             </a>` : ''
+                        }
+                    `;
+                    imageList.appendChild(li);
+                });
+            } else {
+                console.warn("batchData.images não é um array ou está vazio:", batchData.images);
+            }
+
+            // Lógica de REDIRECIONAMENTO para a página de resultados
+            if (batchData.status === 'completed_batch' && !hasRedirected) { // O status 'completed_batch' indica que o lote inteiro foi concluído
+                console.log('Lote concluído. Redirecionando para a página de resultados...');
+                hasRedirected = true; // Define a flag para true
+                clearInterval(statusCheckInterval); // Para de verificar
+                // Adiciona um pequeno atraso antes de redirecionar para o usuário ver o 100%
+                setTimeout(() => {
+                    window.location.href = `/painel_resultados?batch_id=${currentBatchId}`; // Redireciona com o ID do lote
+                }, 1500); // 1.5 segundos de atraso
+            } else if (batchData.status === 'failed_batch' && !hasRedirected) {
+                console.error('Lote falhou. Exibindo mensagem de erro.');
+                hasRedirected = true;
+                clearInterval(statusCheckInterval);
+                displayMessage('O processamento do lote falhou. Por favor, tente novamente.', 'error');
+                // Opcional: redirecionar para uma página de erro ou upload
+            }
+
+        } catch (error) {
+            console.error('Erro ao buscar status do lote:', error);
+            // Se o lote não for encontrado (ex: 404), mostre as instruções de não-lote
+            if (error.message.includes('404')) {
+                showNoBatchInstructions();
+            }
+            clearInterval(statusCheckInterval); // Para a verificação em caso de erro
+        }
+    }
+
+    // Função para mostrar instruções quando não há batch_id
+    function showNoBatchInstructions() {
+        const mainElement = document.querySelector('main');
         let instructionsDiv = document.getElementById('instructionsMessage');
         if (!instructionsDiv) {
             instructionsDiv = document.createElement('div');
@@ -71,108 +131,31 @@ document.addEventListener('DOMContentLoaded', async function() {
             <p style="font-size: 0.9em; color: #888;">Você será redirecionado para esta página automaticamente após enviar suas imagens.</p>
         `;
         instructionsDiv.style.display = 'block';
-    }
 
-    // Função para atualizar a UI com o status do lote
-    function updateBatchStatusUI(data) {
-        if (!data) return;
-
-        // Atualizar barra de progresso
-        if (batchProgressFill && batchProgressText) {
-            batchProgressFill.style.width = `${data.progress}%`;
-            batchProgressText.textContent = `${data.progress.toFixed(0)}%`;
-        }
-
-        // Atualizar resumo do lote
-        if (batchStatusMessage) batchStatusMessage.textContent = data.message;
-        if (totalImagesSpan) totalImagesSpan.textContent = data.total_images;
-        if (processedImagesSpan) processedImagesSpan.textContent = data.processed_images;
-        if (completedImagesSpan) completedImagesSpan.textContent = data.completed_images;
-        if (failedImagesSpan) failedImagesSpan.textContent = data.failed_images;
-
-        // Atualizar lista de imagens individuais
-        if (imageList) {
-            imageList.innerHTML = ''; // Limpa a lista existente
-            if (data.image_statuses && data.image_statuses.length > 0) {
-                data.image_statuses.forEach(img => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <span>${img.original_filename}</span>
-                        <span class="status ${img.status.toLowerCase().replace(/ /g, '-') || 'pending'}">${img.status}</span>
-                    `;
-                    imageList.appendChild(li);
-                });
-            } else {
-                const li = document.createElement('li');
-                li.textContent = 'Nenhuma imagem no lote ainda ou dados indisponíveis.';
-                imageList.appendChild(li);
-            }
-        }
-    }
-
-    // Função principal de polling
-    async function checkProcessingStatus() {
-        if (!batchId) {
-            showInstructionsUI();
+        if (statusCheckInterval) {
             clearInterval(statusCheckInterval);
-            return;
-        }
-
-        try {
-            showProcessingUI();
-            const statusData = await processingAPI.getBatchProcessingStatus(batchId);
-            console.log("Status do lote:", statusData); // Para depuração
-
-            updateBatchStatusUI(statusData);
-
-            if (statusData.status === 'completed') {
-                clearInterval(statusCheckInterval); // Para o polling
-                batchStatusMessage.textContent = "Lote de processamento concluído com sucesso!";
-                
-                // Opcional: Adicionar um botão para ir para a página de resultados geral
-                const actionButton = document.createElement('a');
-                actionButton.href = "/painel_resultados"; // Link para o painel de resultados geral
-                actionButton.classList.add('button', 'success-button');
-                actionButton.textContent = "Ver Resultados";
-                
-                // Adiciona o botão em algum lugar, por exemplo, abaixo da mensagem de status
-                const messageContainer = document.querySelector('.processing-message');
-                if (messageContainer && !messageContainer.querySelector('.success-button')) { // Evita duplicar
-                    messageContainer.appendChild(document.createElement('br'));
-                    messageContainer.appendChild(actionButton);
-                }
-
-            } else if (statusData.status === 'failed') {
-                clearInterval(statusCheckInterval); // Para o polling
-                batchStatusMessage.textContent = `Lote de processamento falhou: ${statusData.message}`;
-
-                // Opcional: Adicionar um botão para tentar novamente ou voltar ao upload
-                const actionButton = document.createElement('a');
-                actionButton.href = "/painel_upload";
-                actionButton.classList.add('button', 'error-button');
-                actionButton.textContent = "Tentar Novo Upload";
-
-                const messageContainer = document.querySelector('.processing-message');
-                if (messageContainer && !messageContainer.querySelector('.error-button')) { // Evita duplicar
-                    messageContainer.appendChild(document.createElement('br'));
-                    messageContainer.appendChild(actionButton);
-                }
-
-            }
-        } catch (error) {
-            console.error('Erro ao verificar status do processamento:', error);
-            batchStatusMessage.textContent = `Erro ao carregar status: ${error.message}`;
-            clearInterval(statusCheckInterval); // Para o polling em caso de erro
-            showInstructionsUI(); // Exibe as instruções em caso de erro crítico
+            statusCheckInterval = null;
         }
     }
 
-    // Inicia o polling apenas se um batch_id estiver presente
-    if (batchId) {
-        showProcessingUI();
-        checkProcessingStatus(); // Chama imediatamente para obter o status inicial
-        statusCheckInterval = setInterval(checkProcessingStatus, pollInterval);
+    // Inicialização: Verifica se há um batch_id na URL
+    if (currentBatchId) {
+        console.log('Batch ID encontrado na URL:', currentBatchId);
+        // Esconde as instruções iniciais e mostra o spinner/progresso
+        document.getElementById('instructionsMessage').style.display = 'none';
+        loadingSpinner.style.display = 'block';
+        processingMessage.style.display = 'block'; // Mostra a mensagem "Nossa inteligência artificial..."
+        progressBarContainer.style.display = 'block'; // Mostra a barra de progresso (vazia no início)
+        batchSummaryContainer.style.display = 'block'; // Mostra o resumo
+        imageListContainer.style.display = 'block'; // Mostra a lista
+        infoBox.style.display = 'block'; // Mostra a caixa de info
+
+        // Inicia a primeira verificação imediatamente
+        updateBatchStatus();
+        // Configura a verificação a cada 2 segundos
+        statusCheckInterval = setInterval(updateBatchStatus, 2000);
     } else {
-        showInstructionsUI(); // Mostra as instruções se não há batch_id na URL
+        console.log('Nenhum Batch ID encontrado na URL. Mostrando instruções.');
+        showNoBatchInstructions();
     }
 });
