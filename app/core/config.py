@@ -17,7 +17,8 @@ PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 XLSX_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Caminhos dos modelos YOLO
-YOLO_LIXEIRAS_MODEL_PATH = BASE_DIR / "training" / "yolov11_residuos_custom2" / "weights" / "best.pt"
+
+YOLO_MODEL_PATH = BASE_DIR / "training" / "yolov11_lixeiras_custom" / "weights" / "best.pt"
 YOLO_GENERAL_MODEL_PATH = None
 
 # Carregamento dos modelos
@@ -29,8 +30,8 @@ try:
     from torch.nn import Conv2d
     torch.serialization.add_safe_globals([DetectionModel, Sequential, Conv2d])
 
-    model_yolo_lixeiras = YOLO(YOLO_LIXEIRAS_MODEL_PATH)
-    print(f"Modelo YOLO de lixeiras carregado com sucesso de: {YOLO_LIXEIRAS_MODEL_PATH}")
+    model_yolo_lixeiras = YOLO(YOLO_MODEL_PATH)
+    print(f"Modelo YOLO de lixeiras carregado com sucesso de: {YOLO_MODEL_PATH}")
     from ultralytics.nn.tasks import DetectionModel
 
 except Exception as e:
