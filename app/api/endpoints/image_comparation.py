@@ -11,8 +11,9 @@ from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
 import pandas as pd
 import traceback
-from PIL import Image # Importar Pillow para manipulação de imagem
-from datetime import datetime # Importar datetime para a data da operação
+from PIL import Image
+from datetime import datetime
+import torch
 
 from app.core.database import (
     SessionLocal,
@@ -23,450 +24,402 @@ from app.core.database import (
     update_db_processing_status,
     get_db_processing_status,
     create_db_processing_entry,
-    create_db_batch_entry,
+    create_db_batch_entry,  # <<-- Mantenha esta importação
     get_db_results,
     get_db_batch_status,
     get_db_all_images_for_batch
 )
 
-# Importar configurações e modelo YOLO
 from app.core.config import PROCESSED_IMAGES_DIR, YOLO_CLASSES, model_yolo_lixeiras, XLSX_RESULTS_DIR
 
-from sqlalchemy.orm import Session # Mantenha a importação de Session
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-# Dicionário para armazenar o status do processamento (em memória, para simplificar)
-# Esta variável não é mais utilizada diretamente, pois o status é gerenciado via DB
-# processing_status: Dict[str, Dict] = {}
+CONFIDENCE_THRESHOLD_TP = 0.70
 
 
-# Define o threshold de confiança para Verdadeiro Positivo
-CONFIDENCE_THRESHOLD_TP = 0.70 # 70%
+def resize_image_with_padding(image_path: Path, target_size=(640, 640)):
+    with Image.open(image_path) as img:
+        original_width, original_height = img.size
+        target_width, target_height = target_size
 
-def classify_detection_by_confidence(confidence: float) -> str:
-    """
-    Classifica uma detecção com base em seu índice de confiança,
-    usando terminologia de métricas de classificação adaptada para a ausência de Ground Truth.
-    Esta é uma heurística para categorizar a qualidade da detecção do modelo.
-    """
-    if confidence >= CONFIDENCE_THRESHOLD_TP:
-        return "Verdadeiro Positivo" # Detecção com alta confiança, atende ao critério de 'verdadeiro' do usuário
-    else:
-        return "Falso Positivo"   # Detecção com baixa confiança, não atinge o critério de 'verdadeiro'
+        ratio_w = target_width / original_width
+        ratio_h = target_height / original_height
+        ratio = min(ratio_w, ratio_h)
+
+        new_width = int(original_width * ratio)
+        new_height = int(original_height * ratio)
+
+        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        new_img = Image.new("RGB", target_size, (0, 0, 0))
+
+        paste_x = (target_width - new_width) // 2
+        paste_y = (target_height - new_height) // 2
+        new_img.paste(img, (paste_x, paste_y))
+
+        return new_img
 
 
-async def process_image_task(processing_id: str, file_path: Path, original_filename: str, db: Session, batch_id: str):
-    """
-    Função assíncrona para processar uma única imagem usando o modelo YOLO.
-    Esta função agora será executada em um pool de threads de segundo plano.
-    O argumento 'db' é injetado e a sessão é gerenciada externamente.
-    """
+async def process_image_task(processing_id: str, file_path: Path, original_filename: str):
+    db = SessionLocal()
+    batch_processing_id = None
+
     try:
-        print(f"[DEBUG] Iniciando processamento para: {original_filename} (ID: {processing_id})")
-
-        if model_yolo_lixeiras is None:
-            print("[ERRO] Modelo YOLO não carregado. Verifique config.py.")
-            raise ValueError("Modelo YOLO não carregado.")
+        processing_entry = db.query(ImageProcessing).filter(ImageProcessing.id == processing_id).first()
+        if not processing_entry:
+            raise ValueError(f"Entrada de processamento não encontrada para ID: {processing_id}")
+        batch_processing_id = processing_entry.batch_processing_id
 
         print(f"[DEBUG] Executando inferência YOLO para {original_filename}...")
-        results = model_yolo_lixeiras(str(file_path))
-        print(f"[DEBUG] Inferência YOLO concluída para {original_filename}. Resultados detectados: {len(results)}.")
+
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        results = model_yolo_lixeiras(str(file_path), device=device)
 
         detection_data = []
-        # Contadores para as classificações baseadas em confiança
-        true_positives_count = 0      # Detecções com confiança >= 70%
-        false_positives_count = 0     # Detecções com confiança < 70%
-        # False Negatives (FN) e True Negatives (TN) não podem ser calculados por imagem
-        # sem um ground truth real para comparação.
+        has_detections = False
 
-        image_has_detections = False # Flag para saber se alguma coisa foi detectada
+        results_list = results if isinstance(results, list) else [results]
 
-        current_time_for_report = datetime.now() # Data/hora da operação
-        operation_date_str = current_time_for_report.strftime("%Y-%m-%d %H:%M:%S")
+        for r in results_list:
+            if r.boxes is None or len(r.boxes) == 0:
+                print(
+                    f"[DEBUG_YOLO] r.boxes é None ou vazio para {original_filename}. Pulando detecções para este resultado.")
+                continue
 
-        if len(results) > 0 and hasattr(results[0], 'boxes'):
-            for r in results:
-                if hasattr(r, 'boxes') and r.boxes:
-                    image_has_detections = True
-                    for box in r.boxes:
-                        class_id = int(box.cls[0])
-                        class_name = model_yolo_lixeiras.names[class_id]
-                        confidence = float(box.conf[0])
-                        # As coordenadas x1, y1, x2, y2 não serão mais usadas no relatório Excel
-                        # x1, y1, x2, y2 = [float(coord) for coord in box.xyxy[0]]
+            boxes = r.boxes.xyxy.cpu().numpy()
+            scores = r.boxes.conf.cpu().numpy()
+            classes = r.boxes.cls.cpu().numpy()
 
-                        # Usa a nova função para classificar
-                        classification_result_type = classify_detection_by_confidence(confidence)
+            print(
+                f"[DEBUG] Inferência YOLO concluída para {original_filename}. Resultados detectados (len(boxes)): {len(boxes)}.")
 
-                        if classification_result_type == "Verdadeiro Positivo":
-                            true_positives_count += 1
-                        elif classification_result_type == "Falso Positivo":
-                            false_positives_count += 1
+            if len(boxes) > 0:
+                for i in range(len(boxes)):
+                    class_id = int(classes[i])
+                    class_name = YOLO_CLASSES.get(class_id, f"unknown_class_{class_id}")
+                    confidence = float(scores[i])
 
-                        detection_data.append({
-                            "image_id": processing_id, # Adiciona o ID da imagem processada
-                            "class_name": class_name,
-                            "confidence": confidence,
-                            # "bbox": [x1, y1, x2, y2], # REMOVIDO: Bounding box não será mais exportada para o Excel
-                            "operation_date": operation_date_str, # Adiciona a data da operação
-                            "classification_type": classification_result_type
-                        })
+                    classification_type = "Positivo Verdadeiro" if confidence >= CONFIDENCE_THRESHOLD_TP else "Falso Positivo"
+
+                    detection_data.append({
+                        "image_id": processing_id,
+                        "class_name": class_name,
+                        "confidence": confidence,
+                        "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "classification_type": classification_type
+                    })
+                    has_detections = True
+            else:
+                print(f"[DEBUG_YOLO] len(boxes) é 0. Nenhuma detecção válida foi processada.")
+
         print(f"[DEBUG] Dados de detecção coletados para {original_filename}: {detection_data}")
 
-        # Resumo das classificações baseadas em confiança
-        classification_summary = {
-            "Verdadeiro Positivo": true_positives_count,
-            "Falso Positivo": false_positives_count,
-            "Falso Negativo": 0, # Sem ground truth, não é possível determinar
-            "Verdadeiro Negativo": 0, # Sem ground truth/áreas negativas, não é possível determinar
-            "Total de Detecções Processadas": true_positives_count + false_positives_count
-        }
-
-        # Salvar a imagem processada com as caixas desenhadas
         processed_image_name = f"processed_{processing_id}_{original_filename}"
         processed_image_path = PROCESSED_IMAGES_DIR / processed_image_name
 
-        if image_has_detections and len(results) > 0:
-            rendered_image = results[0].plot() # Retorna um array numpy (BGR)
-            # Verifica se 'rendered_image' é um array numpy antes de usar Image.fromarray
-            if isinstance(rendered_image, (Image.Image, Path)): # Se já é uma Imagem PIL ou Path, não precisa converter
-                # Já é um objeto PIL Image ou um path válido, apenas salva
-                if isinstance(rendered_image, Image.Image):
-                    rendered_image.save(processed_image_path)
-                elif isinstance(rendered_image, Path):
-                    shutil.copy(rendered_image, processed_image_path)
-            else: # Assume que é um array numpy (BGR) e converte para RGB para salvar
-                Image.fromarray(rendered_image[..., ::-1]).save(processed_image_path)
+        if has_detections:
+            annotated_img_array = results_list[0].plot(conf=True, labels=True, boxes=True)
+            Image.fromarray(annotated_img_array[..., ::-1]).save(processed_image_path)
             print(f"[DEBUG] Imagem processada com caixas desenhadas salva em: {processed_image_path}")
         else:
             print(f"[DEBUG] Nenhuma detecção para {original_filename}. Copiando imagem original.")
-            shutil.copy(file_path, processed_image_path) # Copia a original se não houver detecções
+            shutil.copy(file_path, processed_image_path)
 
-        processed_image_url = f"/static/processed_images/{processed_image_name}"
+        try:
+            result_entry = db.query(ImageProcessingResult).filter(
+                ImageProcessingResult.image_processing_id == processing_id).first()
+            if result_entry:
+                result_entry.detection_data = json.dumps(detection_data)
+                result_entry.processed_image_path = str(processed_image_path)
+                result_entry.status = "completed"
+                db.add(result_entry)
+                db.commit()
+                db.refresh(result_entry)
+                print(f"[DEBUG] Resultado de processamento atualizado para {processing_id}.")
+            else:
+                print(f"AVISO: Entrada de resultado para {processing_id} não encontrada. Criando uma nova.")
+                new_result_entry = ImageProcessingResult(
+                    id=processing_id,
+                    image_processing_id=processing_id,
+                    detection_data=json.dumps(detection_data),
+                    processed_image_path=str(processed_image_path),
+                    status="completed",
+                    created_at=datetime.now()
+                )
+                db.add(new_result_entry)
+                db.commit()
+                db.refresh(new_result_entry)
+                print(f"[DEBUG] Nova entrada de resultado criada para {processing_id}.")
 
-        # --- Geração do Relatório Excel ---
-        # Novo nome do arquivo Excel com data da operação, ID do lote e ID da imagem
-        data_operacao_filename = current_time_for_report.strftime("%Y%m%d_%H%M%S")
-        excel_file_name = f"relatorio_{data_operacao_filename}_lote_{batch_id}_imagem_{processing_id}.xlsx"
-        excel_file_path = XLSX_RESULTS_DIR / excel_file_name
-        print(f"[DEBUG] Tentando gerar Excel em: {excel_file_path}")
+            if detection_data:
+                excel_file_name = f"relatorio_lote_{batch_processing_id}_imagem_{processing_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                excel_file_path = XLSX_RESULTS_DIR / excel_file_name
+                print(f"[DEBUG] Tentando gerar Excel em: {excel_file_path}")
 
-        excel_report_url = None
-        if detection_data:
-            try:
-                # Criar DataFrame para as detecções individuais
-                df_detections = pd.DataFrame(detection_data)
-                df_detections.rename(columns={
-                    "image_id": "ID da Imagem", # Nova coluna e nome
-                    "class_name": "Classe Detectada", # Nome alterado
-                    "confidence": "Grau de Confiança", # Nome alterado
-                    "operation_date": "Data da Operação", # Nova coluna e nome
-                    "classification_type": "Tipo de Classificação" # Manter
-                }, inplace=True)
-                df_detections["Grau de Confiança"] = (df_detections["Grau de Confiança"] * 100).round(2).astype(str) + "%"
-                # REMOVIDO: df_detections["Coordenadas (x1, y1, x2, x2)"] = df_detections["Coordenadas (x1, y1, x2, x2)"].apply(lambda x: f"[{', '.join(map(str, x))}]")
+                df = pd.DataFrame(detection_data)
+                df['image_name'] = original_filename
+                df['batch_id'] = batch_processing_id
 
+                cols = ['batch_id', 'image_name', 'class_name', 'confidence', 'classification_type', 'operation_date',
+                        'image_id']
+                df = df[cols]
 
-                # Criar DataFrame para o resumo da classificação
-                df_summary = pd.DataFrame.from_dict(classification_summary, orient='index', columns=['Valor'])
-                df_summary.index.name = "Métrica de Classificação" # Nomeia o índice para clareza
-
-                # Usar ExcelWriter para salvar múltiplos DataFrames em abas diferentes
                 with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
-                    df_detections.to_excel(writer, sheet_name='Detecções Individuais', index=False)
-                    df_summary.to_excel(writer, sheet_name='Resumo da Classificação')
+                    df.to_excel(writer, sheet_name='Detecções', index=False)
+                    worksheet = writer.sheets['Detecções']
+                    for i, col in enumerate(df.columns):
+                        max_len = max(df[col].astype(str).map(len).max(), len(col)) + 2
+                        worksheet.set_column(i, i, max_len)
+                print(f"[DEBUG] Relatório Excel gerado em: {excel_file_path}")
+            else:
+                print(f"[DEBUG] Nenhuma detecção para {original_filename}. Relatório Excel não será gerado.")
 
-                print(f"[DEBUG] Relatório Excel com múltiplas abas gerado com sucesso em: {excel_file_path}")
-                excel_report_url = f"/api/download-excel/{excel_file_name}"
-            except Exception as excel_err:
-                print(f"[ERRO CRÍTICO] Falha ao salvar o arquivo Excel para {original_filename}: {excel_err}")
-                traceback.print_exc()
-                excel_file_name = None
-                excel_file_path = None
-                excel_report_url = None
-        else:
-            print(f"[DEBUG] Nenhum dado de detecção para {original_filename}. Relatório Excel não será gerado.")
-            excel_file_name = None
-            excel_file_path = None
-            excel_report_url = None
-
-        # Dados a serem salvos no banco de dados para o frontend
-        full_detection_data = {
-            "detections": detection_data, # Lista de detecções individuais
-            "classification_summary_confidence_based": classification_summary, # Resumo das contagens
-            "model_precision_average": 0.0 # Placeholder para a demanda 3
-        }
-
-        await update_db_processing_status(
-            processing_id,
-            "completed",
-            processed_image_url,
-            excel_report_url,
-            json.dumps(full_detection_data),
-            db
-        )
-        print(f"[DEBUG] Status do processamento para {processing_id} atualizado para 'completed'.")
+        except Exception as e:
+            db.rollback()
+            print(f"[ERRO CRÍTICO] Falha ao salvar resultados no DB ou gerar Excel para {original_filename}: {e}")
+            traceback.print_exc()
+            update_db_processing_status(db, processing_id, "failed")
+            raise
 
     except Exception as e:
-        print(f"[ERRO INESPERADO] na process_image_task para {original_filename} (ID: {processing_id}): {e}")
+        print(f"[ERRO CRÍTICO] Falha geral ao processar imagem {original_filename}: {e}")
         traceback.print_exc()
-        # Garante que o JSON de falha ainda inclua as chaves esperadas
-        await update_db_processing_status(
-            processing_id,
-            "failed",
-            processed_image_url=None,
-            excel_report_url=None,
-            detection_data_json=json.dumps({
-                "detections": [],
-                "classification_summary_confidence_based": {
-                    "Verdadeiro Positivo": 0,
-                    "Falso Positivo": 0,
-                    "Falso Negativo": 0,
-                    "Verdadeiro Negativo": 0,
-                    "Total de Detecções Processadas": 0
-                },
-                "model_precision_average": 0.0
-            }),
-            db=db
-        )
-        print(f"[DEBUG] Status do processamento para {processing_id} atualizado para 'failed' devido a erro.")
+        if db.is_active:
+            db.rollback()
+            db.close()
+        # Se a sessão fechou ou falhou, force uma nova para a atualização de status
+        update_db_processing_status(None, processing_id, "failed", force_new_session=True)
+    finally:
+        if file_path.exists():
+            try:
+                os.remove(file_path)
+                print(f"[DEBUG] Arquivo temporário RAW removido: {file_path}")
+            except OSError as e:
+                print(f"AVISO: Não foi possível remover o arquivo temporário RAW {file_path}: {e}")
+        if db.is_active:  # Garante que a sessão seja fechada apenas se ainda estiver ativa
+            db.close()
 
 
-# Rota para upload de imagens em lote
-@router.post("/upload-image", response_model=Dict[str, str], summary="Realiza o upload de imagens para processamento em lote")
-async def upload_images(
-    background_tasks: BackgroundTasks,
-    files: List[UploadFile] = File(..., description="Múltiplas imagens para processamento"),
-    db: Session = Depends(get_db)
-):
+# Endpoint para upload de imagens
+@router.post("/upload-image")
+async def upload_image(files: List[UploadFile] = File(...), background_tasks: BackgroundTasks = None):
     if not files:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nenhum arquivo enviado.")
 
     batch_id = str(uuid.uuid4())
-    await create_db_batch_entry(batch_id, db)
-    print(f"[DEBUG] Lote criado com ID: {batch_id}")
 
-    temp_image_dir = Path("data/temp_images")
-    temp_image_dir.mkdir(parents=True, exist_ok=True)
-
-    processing_ids = []
-
-    for file in files:
-        original_filename = file.filename
-        file_extension = Path(original_filename).suffix.lower()
-        if file_extension not in [".jpg", ".jpeg", ".png", ".webp"]:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Tipo de arquivo não suportado: {file_extension}. Apenas .jpg, .jpeg, .png, .webp são permitidos.")
-
-        processing_id = str(uuid.uuid4())
-        unique_filename = f"{processing_id}_{original_filename}"
-        file_path = temp_image_dir / unique_filename
-
-        try:
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            print(f"[DEBUG] Arquivo salvo temporariamente em: {file_path}")
-
-            # Cria a entrada no DB antes de iniciar a tarefa em segundo plano
-            await create_db_processing_entry(
-                processing_id=processing_id,
-                batch_processing_id=batch_id,
-                original_filename=original_filename,
-                file_path=str(file_path),
-                db=db
-            )
-            processing_ids.append(processing_id)
-
-            # Adiciona a tarefa de processamento à fila de tarefas em segundo plano
-            # Passamos a sessão 'db' e o 'batch_id' explicitamente para a tarefa de background
-            background_tasks.add_task(process_image_task, processing_id, file_path, original_filename, db, batch_id)
-            print(f"[DEBUG] Tarefa de background adicionada para {original_filename} (ID: {processing_id})")
-
-        except Exception as e:
-            print(f"[ERRO] Falha ao salvar ou agendar {original_filename}: {e}")
-            if processing_id in processing_ids:
-                await update_db_processing_status(processing_id, "failed", None, None, json.dumps({
-                    "detections": [],
-                    "classification_summary_confidence_based": {
-                        "Verdadeiro Positivo": 0, "Falso Positivo": 0,
-                        "Falso Negativo": 0, "Verdadeiro Negativo": 0,
-                        "Total de Detecções Processadas": 0
-                    },
-                    "model_precision_average": 0.0
-                }), db)
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao processar {original_filename}: {e}")
-        finally:
-            file.file.close()
-
-    return JSONResponse(content={"message": "Imagens recebidas e processamento iniciado em segundo plano.", "batch_id": batch_id})
-
-
-# Rota para obter o status de uma imagem individual
-@router.get("/image-status/{processing_id}", response_model=Dict[str, Any], summary="Obtém o status de processamento de uma imagem individual")
-async def get_image_status(processing_id: str, db: Session = Depends(get_db)):
-    status_entry = await get_db_processing_status(processing_id, db)
-    if not status_entry:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ID de processamento não encontrado.")
-
-    response_data = {
-        "processing_id": status_entry.id,
-        "original_filename": status_entry.original_filename,
-        "status": status_entry.status,
-        "processed_image_url": status_entry.processed_image_url,
-        "excel_report_url": status_entry.excel_report_url,
-        "detection_data": json.loads(status_entry.detection_data) if status_entry.detection_data else {},
-        "created_at": status_entry.created_at.isoformat(),
-        "updated_at": status_entry.updated_at.isoformat() if status_entry.updated_at else None,
-    }
-    return response_data
-
-
-# Rota para obter o status de um lote de imagens
-@router.get("/batch-status/{batch_id}", response_model=Dict[str, Any], summary="Obtém o status de processamento de um lote de imagens")
-async def get_batch_status(batch_id: str, db: Session = Depends(get_db)):
-    batch_status_data = await get_db_batch_status(batch_id, db)
-    if not batch_status_data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ID do lote não encontrado.")
-
-    return batch_status_data
-
-# Rota para obter todos os resultados de imagens para um lote específico
-@router.get("/batch-images/{batch_id}", response_model=List[Dict[str, Any]], summary="Lista todos os resultados de imagens para um dado lote")
-async def get_all_images_for_batch(batch_id: str, db: Session = Depends(get_db)):
-    images_in_batch = await get_db_all_images_for_batch(batch_id, db)
-    if not images_in_batch:
-        return []
-
-    results_list = []
-    for img_entry in images_in_batch:
-        result_data = {
-            "processing_id": img_entry.id,
-            "original_filename": img_entry.original_filename,
-            "status": img_entry.status,
-            "processed_image_url": img_entry.result.processed_image_url if img_entry.result else None,
-            "excel_report_url": img_entry.result.excel_report_url if img_entry.result else None,
-            "detection_data": json.loads(img_entry.result.detection_data) if img_entry.result and img_entry.result.detection_data else {},
-            "created_at": img_entry.created_at.isoformat(),
-            "updated_at": img_entry.updated_at.isoformat() if img_entry.updated_at else None,
-        }
-        results_list.append(result_data)
-    return results_list
-
-
-# Rota para baixar o arquivo Excel de um resultado específico
-@router.get("/download-excel/{file_name:path}", summary="Baixa o arquivo Excel de um resultado de processamento")
-async def download_excel_report(file_name: str):
-    file_path = XLSX_RESULTS_DIR / file_name
-    if not file_path.exists():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo Excel não encontrado.")
-
-    return FileResponse(path=file_path, filename=file_name, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-
-# Rota para baixar um arquivo ZIP de resultados (imagens processadas + Excel + Original)
-@router.get("/download-zip/{result_id}", summary="Baixa um arquivo ZIP contendo a imagem processada, original e o relatório Excel (se disponíveis) de um resultado específico.")
-async def download_zip_report(result_id: str, db: Session = Depends(get_db)):
-    result_entry = db.query(ImageProcessingResult).filter(ImageProcessingResult.id == result_id).first()
-    if not result_entry or result_entry.status != "completed":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resultado do processamento não encontrado ou não concluído.")
-
-    processing_record = db.query(ImageProcessing).filter(ImageProcessing.id == result_entry.image_processing_id).first()
-
-    zip_file_name = f"relatorio_{result_id}.zip"
-    zip_file_path = XLSX_RESULTS_DIR / zip_file_name
-
+    # <<<<<< CORREÇÃO AQUI >>>>>>
+    # create_db_batch_entry já gerencia sua própria sessão do DB.
+    # Removida a criação e fechamento de sessão local aqui.
     try:
-        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Adicionar a imagem processada
-            if result_entry.processed_image_url:
-                image_name_in_dir = Path(result_entry.processed_image_url).name
-                actual_image_path = PROCESSED_IMAGES_DIR / image_name_in_dir
-                if actual_image_path.exists():
-                    zipf.write(actual_image_path, actual_image_path.name)
-                else:
-                    print(f"AVISO: Imagem processada não encontrada em: {actual_image_path}")
-
-            # Adicionar o arquivo Excel (com o novo nome)
-            if result_entry.excel_report_url:
-                excel_name_in_dir = Path(result_entry.excel_report_url).name
-                actual_excel_path = XLSX_RESULTS_DIR / excel_name_in_dir
-                if actual_excel_path.exists():
-                    zipf.write(actual_excel_path, actual_excel_path.name) # Adiciona com o nome completo gerado
-                else:
-                    print(f"AVISO: Arquivo Excel não encontrado em: {actual_excel_path}")
-
-            # Adicionar a imagem original se disponível
-            if processing_record and processing_record.file_path:
-                original_image_path = Path(processing_record.file_path)
-                if original_image_path.exists():
-                    zipf.write(original_image_path, f"original_{original_image_path.name}")
-                else:
-                    print(f"AVISO: Imagem original não encontrada em: {original_image_path}")
-            else:
-                print(f"AVISO: Não foi possível encontrar o caminho da imagem original para o result_id {result_id}.")
-
-
-        return FileResponse(path=zip_file_path, filename=zip_file_name, media_type="application/zip",
-                            headers={"Content-Disposition": f"attachment; filename={zip_file_name}"})
+        await create_db_batch_entry(batch_id, len(files))  # <<-- CHAMA SEM PASSAR 'db'
     except Exception as e:
-        print(f"Erro ao criar arquivo ZIP para result_id {result_id}: {e}")
+        print(f"Erro ao criar entrada de lote no DB: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Erro ao gerar arquivo ZIP.")
-    finally:
-        pass
+                            detail="Erro ao iniciar o lote de processamento no banco de dados.")
 
-# Rota para baixar um arquivo ZIP de um lote completo
-@router.get("/download-batch-zip/{batch_id}", summary="Baixa um arquivo ZIP contendo todas as imagens processadas, originais e relatórios Excel de um lote.")
-async def download_batch_zip_report(batch_id: str, db: Session = Depends(get_db)):
-    batch_entry = db.query(BatchProcessing).filter(BatchProcessing.id == batch_id).first()
-    if not batch_entry:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lote não encontrado.")
+    uploaded_image_ids = []
+    TEMP_RAW_IMAGES_DIR = Path("data") / "temp_images"
+    TEMP_RAW_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-    zip_file_name = f"lote_relatorio_{batch_id}.zip"
-    zip_file_path = XLSX_RESULTS_DIR / zip_file_name
+    for file in files:
+        processing_id = str(uuid.uuid4())
+        original_filename = file.filename
+        temp_file_path = TEMP_RAW_IMAGES_DIR / f"{processing_id}_{original_filename}"
 
+        try:
+            with open(temp_file_path, "wb") as buffer:
+                buffer.write(await file.read())
+
+            # Para criar a entrada da imagem, *esta* função (create_db_processing_entry)
+            # espera uma sessão DB. Então, uma nova sessão é aberta e fechada por imagem.
+            db_image_entry = SessionLocal()
+            try:
+                await create_db_processing_entry(processing_id, batch_id, original_filename, str(temp_file_path),
+                                                 db_image_entry)
+            finally:
+                db_image_entry.close()
+
+            uploaded_image_ids.append(processing_id)
+
+            background_tasks.add_task(process_image_task, processing_id, temp_file_path, original_filename)
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao salvar ou agendar o processamento de {original_filename}: {e}")
+            traceback.print_exc()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Erro ao processar {original_filename}: {e}")
+
+    return JSONResponse(content={"message": "Imagens enviadas e processamento agendado.", "batch_id": batch_id,
+                                 "image_ids": uploaded_image_ids})
+
+
+@router.get("/batch-status/{batch_id}")
+async def get_batch_status_endpoint(batch_id: str, db: Session = Depends(get_db)):
+    batch_status_data = await get_db_batch_status(batch_id, db)
+    if not batch_status_data:
+        raise HTTPException(status_code=404, detail="Lote não encontrado.")
+    return JSONResponse(content=batch_status_data)
+
+
+@router.get("/image-status/{processing_id}")
+async def get_image_status_endpoint(processing_id: str, db: Session = Depends(get_db)):
+    status_data = await get_db_processing_status(processing_id, db)
+    if not status_data:
+        raise HTTPException(status_code=404, detail="Status de imagem não encontrado.")
+    return JSONResponse(content=status_data)
+
+
+@router.get("/results/{result_id}")
+async def get_result_details_endpoint(result_id: str, db: Session = Depends(get_db)):
+    result_details = await get_db_results(result_id, db)
+    if not result_details:
+        raise HTTPException(status_code=404, detail="Resultado não encontrado.")
+    return JSONResponse(content=result_details)
+
+
+@router.get("/batch-images/{batch_id}")
+async def get_batch_images_endpoint(batch_id: str, db: Session = Depends(get_db)):
+    images_in_batch = await get_db_all_images_for_batch(batch_id, db)
+    if not images_in_batch:
+        return JSONResponse(content=[], status_code=200)
+
+    response_data = []
+    for img in images_in_batch:
+        img_dict = {
+            "id": img.id,
+            "original_filename": img.original_filename,
+            "status": img.status,
+            "file_path": str(img.file_path) if img.file_path else None,
+            "processed_image_path": None,
+            "detection_data": []
+        }
+        if img.result:
+            img_dict["processed_image_path"] = img.result.processed_image_path
+            try:
+                img_dict["detection_data"] = json.loads(img.result.detection_data) if img.result.detection_data else []
+            except json.JSONDecodeError:
+                img_dict["detection_data"] = []
+        response_data.append(img_dict)
+
+    return JSONResponse(content=response_data)
+
+
+@router.get("/download-processed-image/{processing_id}")
+async def download_processed_image(processing_id: str):
+    db = SessionLocal()
     try:
+        result = db.query(ImageProcessingResult).filter(
+            ImageProcessingResult.image_processing_id == processing_id).first()
+        if not result or not result.processed_image_path:
+            raise HTTPException(status_code=404, detail="Imagem processada não encontrada.")
+
+        file_path = Path(result.processed_image_path)
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Arquivo de imagem processada não encontrado no servidor.")
+
+        original_filename = "processed_image.jpg"
+        processing_entry = db.query(ImageProcessing).filter(ImageProcessing.id == processing_id).first()
+        if processing_entry:
+            original_filename = f"processed_{processing_entry.original_filename}"
+
+        return FileResponse(path=file_path, filename=original_filename, media_type="image/jpeg")
+    except Exception as e:
+        print(f"Erro ao servir imagem processada {processing_id}: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Erro ao baixar imagem processada.")
+    finally:
+        db.close()
+
+
+@router.get("/download-excel-report/{processing_id}")
+async def download_excel_report(processing_id: str):
+    db = SessionLocal()
+    try:
+        processing_entry = db.query(ImageProcessing).filter(ImageProcessing.id == processing_id).first()
+        if not processing_entry:
+            raise HTTPException(status_code=404, detail="Entrada de processamento não encontrada.")
+
+        batch_id = processing_entry.batch_processing_id
+
+        excel_files = list(XLSX_RESULTS_DIR.glob(f"*lote_{batch_id}_imagem_{processing_id}*.xlsx"))
+
+        if not excel_files:
+            raise HTTPException(status_code=404,
+                                detail="Relatório Excel não encontrado para esta imagem. Pode não haver detecções ou o arquivo ainda não foi gerado.")
+
+        excel_file_path = excel_files[0]
+        excel_file_name = excel_file_path.name
+
+        return FileResponse(path=excel_file_path, filename=excel_file_name,
+                            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Erro ao baixar arquivo Excel para processing_id {processing_id}: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Erro ao baixar arquivo Excel.")
+    finally:
+        db.close()
+
+
+@router.get("/download-batch-zip/{batch_id}")
+async def download_batch_zip(batch_id: str, db: Session = Depends(get_db)):
+    try:
+        zip_file_name = f"lote_{batch_id}_resultados.zip"
+        zip_file_output_dir = Path("data") / "output"
+        zip_file_output_dir.mkdir(parents=True, exist_ok=True)
+        zip_file_path = zip_file_output_dir / zip_file_name
+
         with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            batch_images = db.query(ImageProcessing).filter(ImageProcessing.batch_processing_id == batch_id).all()
-            for img_entry in batch_images:
-                result_entry = db.query(ImageProcessingResult).filter(ImageProcessingResult.image_processing_id == img_entry.id).first()
+            images_in_batch = await get_db_all_images_for_batch(batch_id, db)
 
-                # Adicionar imagem processada
-                if result_entry and result_entry.processed_image_url:
-                    image_name_in_dir = Path(result_entry.processed_image_url).name
-                    actual_image_path = PROCESSED_IMAGES_DIR / image_name_in_dir
-                    if actual_image_path.exists():
-                        zipf.write(actual_image_path, f"processed_{actual_image_path.name}")
-                    else:
-                        print(f"AVISO: Imagem processada não encontrada para {img_entry.original_filename} em {actual_image_path}")
+            if not images_in_batch:
+                raise HTTPException(status_code=404,
+                                    detail="Nenhuma imagem encontrada para este lote ou lote não existe.")
 
-                # Adicionar relatório Excel (com o novo nome)
-                if result_entry and result_entry.excel_report_url:
-                    excel_name_in_dir = Path(result_entry.excel_report_url).name
-                    actual_excel_path = XLSX_RESULTS_DIR / excel_name_in_dir
-                    if actual_excel_path.exists():
-                        # Usar o nome completo do arquivo Excel para incluí-lo no ZIP do lote
-                        zipf.write(actual_excel_path, actual_excel_path.name)
-                    else:
-                        print(f"AVISO: Arquivo Excel não encontrado para {img_entry.original_filename} em {actual_excel_path}")
-
-                # Adicionar imagem original
-                if img_entry.file_path:
+            for img_entry in images_in_batch:
+                if img_entry.file_path and Path(img_entry.file_path).exists():
                     original_file_path = Path(img_entry.file_path)
-                    if original_file_path.exists():
-                        zipf.write(original_file_path, f"original_{original_file_path.name}")
-                    else:
-                        print(f"AVISO: Imagem original não encontrada para {img_entry.original_filename} em {original_file_path}")
+                    zipf.write(original_file_path, f"originais/{original_file_path.name}")
                 else:
-                    print(f"AVISO: Caminho da imagem original não registrado para {img_entry.original_filename}.")
+                    print(f"AVISO: Imagem original não encontrada para {img_entry.original_filename}.")
+
+                if img_entry.result and img_entry.result.processed_image_path and Path(
+                        img_entry.result.processed_image_path).exists():
+                    processed_image_path = Path(img_entry.result.processed_image_path)
+                    zipf.write(processed_image_path, f"processadas/{processed_image_path.name}")
+                else:
+                    print(f"AVISO: Imagem processada não encontrada para {img_entry.original_filename}.")
+
+                excel_files_for_image = list(XLSX_RESULTS_DIR.glob(f"*lote_{batch_id}_imagem_{img_entry.id}*.xlsx"))
+
+                if excel_files_for_image:
+                    actual_excel_path = excel_files_for_image[0]
+                    if actual_excel_path.exists():
+                        zipf.write(actual_excel_path, f"relatorios_excel/{actual_excel_path.name}")
+                    else:
+                        print(
+                            f"AVISO: Arquivo Excel não encontrado para {img_entry.original_filename} em {actual_excel_path}")
+                else:
+                    print(f"DEBUG: Nenhum relatório Excel encontrado para a imagem {img_entry.original_filename}.")
+
+        if not zip_file_path.exists():
+            raise HTTPException(status_code=500, detail="O arquivo ZIP não foi gerado ou está vazio.")
 
         return FileResponse(path=zip_file_path, filename=zip_file_name, media_type="application/zip",
                             headers={"Content-Disposition": f"attachment; filename={zip_file_name}"})
+    except HTTPException as he:
+        raise he
     except Exception as e:
         print(f"Erro ao criar arquivo ZIP para o lote {batch_id}: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Erro ao gerar arquivo ZIP do lote.")
     finally:
-        pass
+        pass  # Você pode adicionar a lógica de remoção do ZIP aqui se desejar

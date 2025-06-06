@@ -1,15 +1,17 @@
 # app/core/database.py
 
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Text, Float, DateTime
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session # <--- ADICIONE 'Session' AQUI
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session
 from datetime import datetime
 from pathlib import Path
 import json
+import traceback  # <--- ADICIONADO: Importa o módulo traceback
+from typing import Optional  # <--- ADICIONADO: Importa Optional do módulo typing
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Define o caminho para o arquivo do banco de dados SQLite
-DATABASE_DIR = PROJECT_ROOT / "data" / "database"  # Isso aponta para /data/database na raiz
+DATABASE_DIR = PROJECT_ROOT / "data" / "database"
 DATABASE_DIR.mkdir(parents=True, exist_ok=True)
 DATABASE_URL = f"sqlite:///{DATABASE_DIR / 'detections.db'}"
 
@@ -25,39 +27,38 @@ Base = declarative_base()
 class BatchProcessing(Base):
     __tablename__ = "batch_processing"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    batch_id = Column(String, unique=True, index=True, nullable=False)  # Este é o UUID do lote
+    batch_id = Column(String, unique=True, index=True, nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     total_images = Column(Integer, default=0, nullable=False)
     processed_images = Column(Integer, default=0, nullable=False)
     completed_images = Column(Integer, default=0, nullable=False)
     failed_images = Column(Integer, default=0, nullable=False)
-    overall_progress = Column(Float, default=0.0, nullable=False)
+    overall_progress = Column(Float, default=0.0, nullable=False)  # Progresso de 0.0 a 100.0
     overall_status = Column(String, default="pending", nullable=False)
-    message = Column(String, nullable=True)  # Mensagem pode ser nula
+    message = Column(String, nullable=True)  # Mensagens de status do lote
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=True)
 
-    # One-to-many relationship with ImageProcessing
+    # Relacionamento com ImageProcessing
     images = relationship("ImageProcessing", back_populates="batch", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<BatchProcessing(id={self.id}, batch_id='{self.batch_id}', status='{self.overall_status}')>"
+        return f"<BatchProcessing(batch_id='{self.batch_id}', status='{self.overall_status}')>"
 
 
 class ImageProcessing(Base):
     __tablename__ = "image_processing"
-    id = Column(String, primary_key=True, index=True)  # Usamos UUIDs como IDs de processamento
-    batch_processing_id = Column(String, ForeignKey("batch_processing.batch_id"),
-                                 nullable=False)  # Foreign Key para o batch_id
+    id = Column(String, primary_key=True, index=True)  # Usamos o UUID como ID
+    batch_processing_id = Column(String, ForeignKey("batch_processing.batch_id"), nullable=False)
     original_filename = Column(String, nullable=False)
-    file_path = Column(String, nullable=False)  # Caminho temporário da imagem original
-    status = Column(String, default="pending")  # pending, processing, completed, failed
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    file_path = Column(String, nullable=False)  # Caminho para a imagem RAW temporária
+    status = Column(String, default="pending", nullable=False)  # pending, processing, completed, failed
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=True)
 
-    # Relacionamento One-to-one com ImageProcessingResult (o resultado final)
+    # Relacionamento com BatchProcessing e ImageProcessingResult
+    batch = relationship("BatchProcessing", back_populates="images")
     result = relationship("ImageProcessingResult", back_populates="image_processing", uselist=False,
                           cascade="all, delete-orphan")
-    # Relacionamento Many-to-one com BatchProcessing
-    batch = relationship("BatchProcessing", back_populates="images")
 
     def __repr__(self):
         return f"<ImageProcessing(id='{self.id}', filename='{self.original_filename}', status='{self.status}')>"
@@ -65,16 +66,15 @@ class ImageProcessing(Base):
 
 class ImageProcessingResult(Base):
     __tablename__ = "image_processing_results"
-    id = Column(String, primary_key=True, index=True)  # Corresponde ao ImageProcessing.id
+    id = Column(String, primary_key=True, index=True)  # Usamos o UUID como ID
     image_processing_id = Column(String, ForeignKey("image_processing.id"), unique=True, nullable=False)
-    processed_image_url = Column(String, nullable=True)
-    excel_report_url = Column(String, nullable=True)
-    detection_data = Column(Text, nullable=True)  # Armazenar JSON como texto
-    status = Column(String, default="pending")  # pending, completed, failed
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    detection_data = Column(Text, nullable=True)  # Armazena dados JSON das detecções
+    processed_image_path = Column(String, nullable=True)  # Caminho para a imagem processada
+    status = Column(String, default="pending", nullable=False)  # completed, failed, etc.
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=True)
 
-    # Relacionamento One-to-one com ImageProcessing (a entrada original)
+    # Relacionamento com ImageProcessing
     image_processing = relationship("ImageProcessing", back_populates="result")
 
     def __repr__(self):
@@ -83,11 +83,14 @@ class ImageProcessingResult(Base):
 
 def create_db_and_tables():
     """Cria as tabelas no banco de dados se elas não existirem."""
+    print("Tentando criar tabelas no banco de dados...")
     Base.metadata.create_all(bind=engine)
-    print("Tabelas do banco de dados verificadas/criadas.")
+    print("Tabelas criadas ou já existentes.")
 
 
-# Função para obter a sessão do banco de dados
+# --- Funções de Ajuda para Interação com o Banco de Dados ---
+
+# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -96,200 +99,216 @@ def get_db():
         db.close()
 
 
-# --- Funções de Ajuda do Banco de Dados ---
+async def create_db_batch_entry(batch_id: str, total_images: int):
+    """
+    Cria uma nova entrada de lote no banco de dados.
+    Esta função gerencia sua própria sessão do DB.
+    """
+    print(f"DEBUG_DB: create_db_batch_entry - Iniciando para batch_id={batch_id}, total_images={total_images}")
+    db = SessionLocal()  # <<--- LINHA CRÍTICA
+    print(f"DEBUG_DB: create_db_batch_entry - Tipo de 'db' após SessionLocal(): {type(db)}")
+    print(f"DEBUG_DB: create_db_batch_entry - É 'db' uma instância de Session? {isinstance(db, Session)}")
 
-async def create_db_batch_entry(batch_id: str, db: Session):
-    """Cria uma nova entrada de lote no banco de dados."""
     try:
-        # Aqui, estamos garantindo que todos os campos obrigatórios são explicitamente nomeados
-        # e que 'total_images' recebe o valor 0 (ou outro valor inteiro inicial).
-        # O 'id' (Primary Key) é autoincremental e não precisa ser passado.
-
-        # --- LINHA DE DEBUG ---
-        print(f"DEBUG: Criando BatchProcessing para batch_id={batch_id}, total_images_init=0, db_type={type(db)}")
-        # --- FIM LINHA DE DEBUG ---
-
-        new_batch = BatchProcessing(
+        new_batch_entry = BatchProcessing(
             batch_id=batch_id,
-            created_at=datetime.now(),
-            total_images=0,  # <--- ESTE DEVE SER O VALOR CORRETO
+            total_images=total_images,
             processed_images=0,
             completed_images=0,
             failed_images=0,
-            overall_progress=0.0,
+            overall_progress=0,
             overall_status="pending",
-            message="Lote de processamento criado."
+            message="Lote criado com sucesso."
         )
-        db.add(new_batch)
+        db.add(new_batch_entry)
         db.commit()
-        db.refresh(new_batch)
-        print(f"DEBUG: Lote {batch_id} criado e persistido com sucesso no DB.")
-        return new_batch
+        db.refresh(new_batch_entry)
+        print(f"DEBUG_DB: Lote {batch_id} criado no DB.")
+        return new_batch_entry
     except Exception as e:
+        print(f"DEBUG_DB: create_db_batch_entry - Exceção capturada: {e}")
+        print(f"DEBUG_DB: create_db_batch_entry - Tipo de 'db' antes do rollback: {type(db)}")
         db.rollback()  # Garante que a transação é revertida em caso de erro
-        print(f"ERRO: Falha ao criar entrada de lote no DB para batch_id={batch_id}: {e}")
-        raise  # Re-lança a exceção para que o chamador possa tratá-la
+        print(f"ERRO: Erro ao criar entrada de lote {batch_id}: {e}")
+        raise  # Relaça a exceção
+    finally:
+        print(f"DEBUG_DB: create_db_batch_entry - Fechando sessão do DB.")
+        db.close()
+
 
 async def create_db_processing_entry(
-        processing_id: str,
-        batch_processing_id: str,
-        original_filename: str,
-        file_path: str,
-        db: Session
+        processing_id: str, batch_id: str, original_filename: str, file_path: str, db: Session
 ):
-    """Cria uma nova entrada de processamento de imagem no banco de dados."""
+    """
+    Cria uma nova entrada de processamento de imagem no banco de dados.
+    Recebe uma sessão DB externa.
+    """
     try:
-        new_entry = ImageProcessing(
+        new_processing_entry = ImageProcessing(
             id=processing_id,
-            batch_processing_id=batch_processing_id,
+            batch_processing_id=batch_id,
             original_filename=original_filename,
             file_path=file_path,
-            status="pending",
-            created_at=datetime.now()
+            status="pending"
         )
-        db.add(new_entry)
+        db.add(new_processing_entry)
 
-        # Cria a entrada de resultado correspondente com o mesmo ID
+        # Cria uma entrada ImageProcessingResult associada, também com status 'pending'
+        # Seu status será atualizado para 'completed' ou 'failed' após o processamento.
         new_result_entry = ImageProcessingResult(
-            id=processing_id,  # Mesmo ID que ImageProcessing
+            id=processing_id,  # Usando o mesmo ID da ImageProcessing
             image_processing_id=processing_id,
-            status="pending",
-            created_at=datetime.now()
+            status="pending"
         )
         db.add(new_result_entry)
 
         db.commit()
-        db.refresh(new_entry)
+        db.refresh(new_processing_entry)
         db.refresh(new_result_entry)
-
-        # Atualiza o total de imagens no lote (se o lote foi criado)
-        batch = db.query(BatchProcessing).filter(BatchProcessing.batch_id == batch_processing_id).first()
-        if batch:
-            batch.total_images += 1
-            db.add(batch)  # Marca o lote para atualização
-            db.commit()  # Confirma a atualização do lote
-
-        return new_entry
+        print(f"Entrada de processamento para {original_filename} (ID: {processing_id}) criada no DB.")
+        return new_processing_entry
     except Exception as e:
         db.rollback()
-        print(f"Erro ao criar entrada de processamento no DB: {e}")
+        print(f"Erro ao criar entrada de processamento para {original_filename}: {e}")
         raise
 
 
-async def update_db_processing_status(
-        processing_id: str,
-        status: str,
-        processed_image_url: str | None,
-        excel_report_url: str | None,
-        detection_data_json: str,
-        db: Session
-):
-    """Atualiza o status e os resultados de uma entrada de processamento de imagem e o lote correspondente."""
+async def update_db_processing_status(db: Session, image_id: str, status: str, message: Optional[str] = None,
+                                      force_new_session: bool = False):
+    """
+    Atualiza o status de processamento de uma imagem e o progresso do lote.
+    Pode forçar uma nova sessão DB se a sessão atual falhou.
+    """
+    local_db = None
+    if force_new_session:
+        local_db = SessionLocal()
+        print(f"DEBUG_DB: update_db_processing_status - Forçando nova sessão para {image_id}.")
+        db_to_use = local_db
+    else:
+        db_to_use = db
+
     try:
-        image_processing_entry = db.query(ImageProcessing).filter(ImageProcessing.id == processing_id).first()
-        if not image_processing_entry:
-            print(f"Entrada ImageProcessing com ID {processing_id} não encontrada para atualização de status.")
-            return
+        image_entry = db_to_use.query(ImageProcessing).filter(ImageProcessing.id == image_id).first()
+        if not image_entry:
+            print(f"AVISO_DB: ImageProcessing entry not found for ID: {image_id}")
+            return False
 
-        # Atualiza a entrada de processamento principal
-        image_processing_entry.status = status
-        image_processing_entry.updated_at = datetime.now()
-        db.add(image_processing_entry)  # Marca para atualização
+        old_status = image_entry.status
+        image_entry.status = status
+        image_entry.updated_at = datetime.now()
 
-        # Atualiza a entrada de resultado correspondente
-        image_result_entry = db.query(ImageProcessingResult).filter(
-            ImageProcessingResult.image_processing_id == processing_id).first()
-        if image_result_entry:
-            image_result_entry.status = status
-            image_result_entry.processed_image_url = processed_image_url
-            image_result_entry.excel_report_url = excel_report_url
-            image_result_entry.detection_data = detection_data_json
-            image_result_entry.updated_at = datetime.now()
-            db.add(image_result_entry)  # Marca para atualização
-        else:
-            print(f"AVISO: Entrada ImageProcessingResult para {processing_id} não encontrada ao atualizar status.")
+        # Atualiza o status do resultado também se houver uma entrada
+        result_entry = db_to_use.query(ImageProcessingResult).filter(
+            ImageProcessingResult.image_processing_id == image_id).first()
+        if result_entry:
+            result_entry.status = status
+            result_entry.updated_at = datetime.now()
+            db_to_use.add(result_entry)
 
-        # Atualiza o status do lote
-        batch = db.query(BatchProcessing).filter(
-            BatchProcessing.batch_id == image_processing_entry.batch_processing_id).first()
-        if batch:
-            if status == "completed":
-                batch.completed_images += 1
-                batch.processed_images += 1
+        # Lógica para atualizar o progresso do lote
+        batch_entry = db_to_use.query(BatchProcessing).filter(
+            BatchProcessing.batch_id == image_entry.batch_processing_id).first()
+        if batch_entry:
+            # Recontar com base no status atualizado
+            if old_status == "pending" and status == "completed":
+                batch_entry.completed_images += 1
+                batch_entry.processed_images += 1
+            elif old_status == "pending" and status == "failed":
+                batch_entry.failed_images += 1
+                batch_entry.processed_images += 1  # Imagens falhas também são "processadas" no sentido de não estarem mais pendentes
+            elif old_status == "processing" and status == "completed":  # Transição de 'processing' para 'completed'
+                batch_entry.completed_images += 1
+                # Se 'processed_images' já foi incrementado ao entrar em 'processing', não incrementa de novo.
+                # Se não, ou se você quer que 'processed_images' represente o total já avaliado:
+                # batch_entry.processed_images += 1
+            elif old_status == "processing" and status == "failed":
+                batch_entry.failed_images += 1
+            # Para outras transições de status, ajuste a lógica de contagem
+
+            batch_entry.overall_progress = (
+                                                       batch_entry.processed_images / batch_entry.total_images) * 100 if batch_entry.total_images > 0 else 0
+
+            if batch_entry.processed_images == batch_entry.total_images:
+                batch_entry.overall_status = "completed"
+                batch_entry.message = "Todos as imagens do lote foram processadas."
             elif status == "failed":
-                batch.failed_images += 1
-                batch.processed_images += 1
-
-            # Calcula o progresso geral
-            if batch.total_images > 0:
-                batch.overall_progress = (batch.processed_images / batch.total_images) * 100
+                # Se uma imagem falha, mas o lote ainda tem imagens pendentes, o lote continua "processing"
+                # A menos que todas as imagens restantes tenham falhado.
+                if batch_entry.processed_images == batch_entry.total_images and batch_entry.failed_images > 0 and batch_entry.completed_images == 0:
+                    batch_entry.overall_status = "failed"
+                    batch_entry.message = "Todas as imagens do lote falharam."
+                elif batch_entry.processed_images == batch_entry.total_images:  # Misto de sucesso e falha
+                    batch_entry.overall_status = "completed_with_errors"
+                    batch_entry.message = "Lote concluído com algumas imagens falhas."
             else:
-                batch.overall_progress = 0.0
+                batch_entry.overall_status = "processing"  # Se ainda houver pendentes
 
-            # Atualiza o status geral do lote
-            if batch.processed_images == batch.total_images and batch.total_images > 0:
-                if batch.failed_images == 0:
-                    batch.overall_status = "completed"
-                    batch.message = "Processamento do lote concluído com sucesso."
-                else:
-                    batch.overall_status = "completed_with_errors"
-                    batch.message = f"Processamento do lote concluído com {batch.failed_images} falhas."
-            elif batch.processed_images > 0 and batch.processed_images < batch.total_images:
-                batch.overall_status = "processing"
-                batch.message = f"Processando lote: {batch.processed_images}/{batch.total_images} imagens."
+            batch_entry.updated_at = datetime.now()
+            db_to_use.add(batch_entry)
 
-            db.add(batch)  # Marca o lote para atualização
-        else:
-            print(f"AVISO: Lote com ID {image_processing_entry.batch_processing_id} não encontrado para atualização.")
-
-        db.commit()  # Confirma todas as alterações de uma vez
+        db_to_use.add(image_entry)  # Adiciona a entrada da imagem atualizada
+        db_to_use.commit()
+        db_to_use.refresh(image_entry)
+        if result_entry:
+            db_to_use.refresh(result_entry)
+        if batch_entry:
+            db_to_use.refresh(batch_entry)
         print(
-            f"DB: Status de {processing_id} e lote {image_processing_entry.batch_processing_id} atualizados para {status}.")
+            f"DEBUG_DB: Status da imagem {image_id} atualizado para '{status}'. Lote '{image_entry.batch_processing_id}' atualizado.")
+        return True
     except Exception as e:
-        db.rollback()
-        print(f"Erro ao atualizar status de processamento no DB para {processing_id}: {e}")
-        raise
+        print(f"ERRO_DB: Falha ao atualizar status para {image_id}: {e}")
+        traceback.print_exc()
+        if db_to_use.is_active:
+            db_to_use.rollback()
+        return False
+    finally:
+        if local_db:  # Fecha a sessão apenas se ela foi criada internamente (force_new_session)
+            local_db.close()
 
 
-async def get_db_processing_status(processing_id: str, db: Session):
-    """Obtém o status e resultados de uma imagem processada pelo seu ID."""
-    result = db.query(ImageProcessingResult).filter(ImageProcessingResult.id == processing_id).first()
-    if result:
-        # Carrega o relacionamento image_processing para acessar o original_filename
-        processing_record = db.query(ImageProcessing).filter(
-            ImageProcessing.id == result.image_processing_id).first()
-        if processing_record:
-            result.original_filename = processing_record.original_filename
-
-        # Desserializa os dados de detecção
-        result.detection_data = json.loads(result.detection_data) if result.detection_data else {}
-
-        db.expunge(result)  # Desanexa o objeto para evitar LazyLoadingError após fechar a sessão
-        return result
+async def get_db_processing_status(image_id: str, db: Session):
+    """Obtém o status de processamento de uma imagem específica."""
+    status_entry = db.query(ImageProcessing).filter(ImageProcessing.id == image_id).first()
+    if status_entry:
+        return {
+            "id": status_entry.id,
+            "batch_processing_id": status_entry.batch_processing_id,
+            "original_filename": status_entry.original_filename,
+            "status": status_entry.status,
+            "created_at": status_entry.created_at.isoformat(),
+            "updated_at": status_entry.updated_at.isoformat() if status_entry.updated_at else None
+        }
     return None
 
 
-async def get_db_results(db: Session):
-    """Retorna todos os resultados de processamento de imagens."""
-    results = db.query(ImageProcessingResult).all()
-    # Para cada resultado, tente carregar o original_filename do ImageProcessing
-    for res in results:
-        processing_record = db.query(ImageProcessing).filter(ImageProcessing.id == res.image_processing_id).first()
-        if processing_record:
-            res.original_filename = processing_record.original_filename
+async def get_db_results(result_id: str, db: Session):
+    """Obtém os detalhes dos resultados de processamento de uma imagem."""
+    result_entry = db.query(ImageProcessingResult).filter(ImageProcessingResult.id == result_id).first()
+    if result_entry:
+        detection_data_parsed = []
+        if result_entry.detection_data:
+            try:
+                detection_data_parsed = json.loads(result_entry.detection_data)
+            except json.JSONDecodeError:
+                print(f"AVISO_DB: Dados de detecção corrompidos para result_id {result_id}")
 
-        # Desserializa os dados de detecção
-        res.detection_data = json.loads(res.detection_data) if res.detection_data else {}
-        db.expunge(res)  # Desanexa cada objeto para evitar problemas de sessão
-
-    return results
+        return {
+            "id": result_entry.id,
+            "image_processing_id": result_entry.image_processing_id,
+            "detection_data": detection_data_parsed,
+            "processed_image_path": result_entry.processed_image_path,
+            "status": result_entry.status,
+            "created_at": result_entry.created_at.isoformat(),
+            "updated_at": result_entry.updated_at.isoformat() if result_entry.updated_at else None
+        }
+    return None
 
 
 async def get_db_batch_status(batch_id: str, db: Session):
     """Obtém o status geral de um lote de processamento."""
     batch_status = db.query(BatchProcessing).filter(BatchProcessing.batch_id == batch_id).first()
     if batch_status:
-        db.expunge(batch_status)  # Desanexa o objeto
         return {
             "batch_id": batch_status.batch_id,
             "total_images": batch_status.total_images,
@@ -305,20 +324,24 @@ async def get_db_batch_status(batch_id: str, db: Session):
     return None
 
 
-async def get_db_all_images_for_batch(batch_id: str, db: Session):  # Agora 'db' é um parâmetro
+async def get_db_all_images_for_batch(batch_id: str, db: Session):
     """
     Carrega todas as entradas de ImageProcessing para um dado batch_id,
     incluindo seus ImageProcessingResult relacionados, se existirem.
     """
     try:
-        images = db.query(ImageProcessing).filter(ImageProcessing.batch_processing_id == batch_id).all()
+        # Carrega as imagens e seus resultados relacionados em uma única consulta
+        images = db.query(ImageProcessing).filter(ImageProcessing.batch_processing_id == batch_id).options(
+            relationship(ImageProcessing.result)).all()
+
+        # Desanexa os objetos da sessão para que possam ser usados fora da sessão
+        # (especialmente útil se você for serializá-los ou passá-los por muitas camadas)
         for img in images:
-            # Acessa o relacionamento 'result' para carregá-lo (se não estiver carregado)
-            # e depois desanexa para evitar problemas de sessão fechada.
             if img.result:
                 db.expunge(img.result)
             db.expunge(img)
         return images
     except Exception as e:
-        print(f"Erro ao obter imagens para o lote {batch_id}: {e}")
-        raise  # Re-raise a exceção para que o chamador possa lidar com ela
+        print(f"ERRO_DB: Falha ao carregar imagens para o lote {batch_id}: {e}")
+        traceback.print_exc()
+        return []  # Retorna lista vazia em caso de erro
