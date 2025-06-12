@@ -1,7 +1,27 @@
+# app/core/config.py
 import os
 from pathlib import Path
 from ultralytics import YOLO
 import torch
+
+# IMPORTS: Todos no topo do arquivo.
+from torch.nn import Sequential, Conv2d, BatchNorm2d, SiLU
+try:
+    from ultralytics.nn.modules.conv import Conv
+    from ultralytics.nn.modules.block import C2f, Bottleneck, SPPF, C3k2
+    from ultralytics.nn.modules.head import Detect
+    from ultralytics.nn.tasks import DetectionModel
+except ImportError as e:
+    print(f"ATENÇÃO: Não foi possível importar um ou mais módulos YOLO necessários para add_safe_globals: {e}")
+    print("Isso pode acontecer se a estrutura interna do Ultralytics mudar. O carregamento pode falhar.")
+    # Defina-os como None ou pule para evitar que a linha add_safe_globals quebre.
+    # Comente os que não puder importar para testar.
+    Conv = None
+    C2f = None
+    Bottleneck = None
+    SPPF = None
+    Detect = None
+    DetectionModel = None
 
 
 # Caminhos base
@@ -17,22 +37,36 @@ PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 XLSX_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Caminhos dos modelos YOLO
-
 YOLO_MODEL_PATH = BASE_DIR / "training" / "yolov11_lixeiras_custom" / "weights" / "best.pt"
 YOLO_GENERAL_MODEL_PATH = None
 
 # Carregamento dos modelos
 try:
 
-    from torch.nn import Sequential, Conv2d  # Adicione ambas aqui.
-    from ultralytics.nn.tasks import DetectionModel
-    from torch.nn import Sequential
-    from torch.nn import Conv2d
-    torch.serialization.add_safe_globals([DetectionModel, Sequential, Conv2d])
+    safe_globals_list = [
+        # Módulos PyTorch genéricos que podem ser serializados pelo modelo
+        Sequential,
+        Conv2d,
+        BatchNorm2d,
+        SiLU,
+        C3k2,
+        Conv,
+        C2f,
+        Bottleneck,
+        SPPF,
+        Detect,
+        DetectionModel
+    ]
+    # Filtra None para o caso de algum import ter falhado no try/except acima
+    torch.serialization.add_safe_globals([g for g in safe_globals_list if g is not None])
 
-    model_yolo_lixeiras = YOLO(YOLO_MODEL_PATH)
-    print(f"Modelo YOLO de lixeiras carregado com sucesso de: {YOLO_MODEL_PATH}")
-    from ultralytics.nn.tasks import DetectionModel
+
+    if YOLO_MODEL_PATH.exists():
+        model_yolo_lixeiras = YOLO(YOLO_MODEL_PATH)
+        print(f"Modelo YOLO de lixeiras carregado com sucesso de: {YOLO_MODEL_PATH}")
+    else:
+        print(f"ERRO: Modelo YOLO não encontrado em: {YOLO_MODEL_PATH}")
+        model_yolo_lixeiras = None
 
 except Exception as e:
     print(f"Erro ao carregar modelo YOLO de lixeiras: {e}")

@@ -190,7 +190,13 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
             db.rollback()
             db.close()
         # Se a sessão fechou ou falhou, force uma nova para a atualização de status
-        update_db_processing_status(None, processing_id, "failed", force_new_session=True)
+        # Em app/api/endpoints/image_comparation.py, na linha 193
+        await update_db_processing_status(  # <--- Garanta que 'await' esteja aqui
+            processing_id=processing_id,
+            status="failed",
+            message=f"Erro no processamento: {e}",
+            progress=0
+        )
     finally:
         if file_path.exists():
             try:
