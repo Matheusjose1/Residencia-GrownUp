@@ -18,6 +18,7 @@ except ImportError as e:
     # Comente os que não puder importar para testar.
     Conv = None
     C2f = None
+    C3k2 = None
     Bottleneck = None
     SPPF = None
     Detect = None
