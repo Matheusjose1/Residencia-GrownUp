@@ -324,24 +324,21 @@ async def get_db_batch_status(batch_id: str, db: Session):
     return None
 
 
-async def get_db_all_images_for_batch(batch_id: str, db: Session):
+async def get_db_all_images_for_batch(db: Session, batch_id: str):
     """
     Carrega todas as entradas de ImageProcessing para um dado batch_id,
     incluindo seus ImageProcessingResult relacionados, se existirem.
     """
     try:
-        # Carrega as imagens e seus resultados relacionados em uma única consulta
-        images = db.query(ImageProcessing).filter(ImageProcessing.batch_processing_id == batch_id).options(
-            relationship(ImageProcessing.result)).all()
-
-        # Desanexa os objetos da sessão para que possam ser usados fora da sessão
-        # (especialmente útil se você for serializá-los ou passá-los por muitas camadas)
-        for img in images:
-            if img.result:
-                db.expunge(img.result)
-            db.expunge(img)
+        # Simplificando a query para evitar o erro _is_core
+        images = db.query(ImageProcessing).filter(
+            ImageProcessing.batch_processing_id == batch_id
+        ).all()
+        
+        # O SQLAlchemy já carregará as detecções se o relacionamento 
+        # estiver configurado como 'lazy=joined' ou similar no Model
         return images
     except Exception as e:
         print(f"ERRO_DB: Falha ao carregar imagens para o lote {batch_id}: {e}")
         traceback.print_exc()
-        return []  # Retorna lista vazia em caso de erro
+        return []

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from ultralytics import YOLO
 import torch
+from ultralytics.nn.tasks import DetectionModel
 
 # IMPORTS: Todos no topo do arquivo.
 from torch.nn import Sequential, Conv2d, BatchNorm2d, SiLU
@@ -38,6 +39,7 @@ PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 XLSX_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Caminhos dos modelos YOLO
+torch.serialization.add_safe_globals([DetectionModel])
 YOLO_MODEL_PATH = BASE_DIR / "training" / "yolov11_lixeiras_custom" / "weights" / "best.pt"
 YOLO_GENERAL_MODEL_PATH = None
 

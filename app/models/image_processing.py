@@ -52,12 +52,14 @@ def process_single_image_yolo(image_path: str) -> Dict[str, Any]:
             cv2.putText(img, label_text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
     # Salva a imagem processada (com os BBOXs)
-    processed_filename = f"detected_{image_base_name}"
-    output_path = PROCESSED_IMAGES_DIR / processed_filename
-    cv2.imwrite(str(output_path), img)
+
+    processed_image_name = f"processed_{image_base_name}"
+    processed_image_path = os.path.join(PROCESSED_IMAGES_DIR, processed_image_name)
+
+    cv2.imwrite(processed_image_path, img)
 
     return {
         "image_name": image_base_name,
-        "processed_image_path": str(output_path),
+        "processed_image_path": processed_image_path,
         "detections": detections_for_image  # Lista de detecções simplificadas
     }

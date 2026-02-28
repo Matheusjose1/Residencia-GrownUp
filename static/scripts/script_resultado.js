@@ -18,15 +18,48 @@ class ProcessingAPI {
      */
     async getProcessingResult(resultId) {
         try {
-            const response = await fetch(`${this.baseUrl}/results/${resultId}`);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Erro HTTP: ${response.status}`);
+            // Busca a lista de imagens do lote
+            const response = await fetch(`/api/batch-images/${resultId}`);
+            const images = await response.json(); // Isso agora é um ARRAY []
+
+            console.log("Dados recebidos do lote:", images);
+
+            if (images && images.length > 0) {
+                // PEGUE A PRIMEIRA IMAGEM DA LISTA PARA EXIBIR
+                const firstImage = images[0];
+
+                // Preencha o cabeçalho usando firstImage em vez de data
+                processingIdSpan.textContent = firstImage.id.substring(0, 8) || 'N/A';
+                processingDateSpan.textContent = new Date().toLocaleDateString('pt-BR');
+
+                // Renderiza o carrossel com todas as imagens
+                carrosselImagesUl.innerHTML = ''; 
+                images.forEach((img, index) => {
+                    const li = document.createElement('li');
+                    li.className = `carrossel-item ${index === 0 ? 'active' : ''}`;
+                    
+                    // Corrige o caminho da imagem (adicionando / se faltar)
+                    let path = img.processed_image_path;
+                    if (path && !path.startsWith('/')) path = '/' + path;
+                    
+                    li.innerHTML = `<img src="${path}" alt="Processado">`;
+                    carrosselImagesUl.appendChild(li);
+                });
+
+                // Se a função renderDetectionsTable não existir, use:
+                if (firstImage.detections) {
+                    mainObjectTypeSpan.textContent = firstImage.detections.length > 0 
+                        ? firstImage.detections[0].class_name 
+                        : 'Nenhum';
+                    // Chame sua função de renderizar a tabela aqui
+                }
+
+            } else {
+                resultsContent.innerHTML = '<p>Nenhum resultado encontrado para este lote.</p>';
             }
-            return response.json();
         } catch (error) {
-            console.error("Erro na chamada da API getProcessingResult:", error);
-            throw error; // Re-lança o erro para ser tratado pelo chamador
+            console.error('Erro ao carregar resultados:', error);
+            resultsContent.innerHTML = `<p class="error-message">Erro: ${error.message}</p>`;
         }
     }
 
@@ -54,190 +87,108 @@ class ProcessingAPI {
 
 // Event listener para garantir que o DOM esteja completamente carregado antes de executar o script
 document.addEventListener('DOMContentLoaded', async function() {
-    // Obtém o ID do resultado da URL (ex: painel_resultados.html?id=SEU_ID_AQUI)
     const urlParams = new URLSearchParams(window.location.search);
-    const resultId = urlParams.get('id');
-
-    // Seleciona os elementos HTML onde os dados serão exibidos
-    const resultsContent = document.getElementById('resultsContent');
+    const batchId = urlParams.get('batch_id');
+    
+    // Elementos da Interface
     const processingIdSpan = document.getElementById('processingId');
     const mainObjectTypeSpan = document.getElementById('mainObjectType');
     const processingDateSpan = document.getElementById('processingDate');
     const carrosselImagesUl = document.getElementById('carrosselImages');
 
-    // Instancia a classe da API
-    const processingAPI = new ProcessingAPI();
-
-    // Exibe mensagem de erro se o ID do resultado não for fornecido
-    if (!resultId) {
-        resultsContent.innerHTML = '<p class="error-message">ID do resultado de processamento não fornecido na URL.</p>';
-        return; // Sai da função, pois não há ID para buscar
+    if (!batchId) {
+        console.error("Batch ID não encontrado na URL");
+        return;
     }
 
     try {
-        // Faz a chamada à API para obter os resultados do processamento
-        const data = await processingAPI.getProcessingResult(resultId);
-        console.log("Dados de resultados recebidos:", data); // Para depuração
+        const response = await fetch(`/api/batch-images/${batchId}`);
+        const images = await response.json();
 
-        // --- Preencher Dados Principais (ID, Tipo Principal, Data) ---
-        processingIdSpan.textContent = data.processing_id || 'N/A';
-        
-        // Lógica para determinar o "Tipo Principal":
-        // Por simplicidade, pega a classe do primeiro objeto detectado.
-        // Você pode ajustar isso para o objeto com maior confiança, ou o mais frequente.
-        if (data.detection_data && data.detection_data.length > 0) {
-            mainObjectTypeSpan.textContent = data.detection_data[0].class_name || 'N/A';
-        } else {
-            mainObjectTypeSpan.textContent = 'Nenhum Objeto Detectado';
-        }
+        console.log("Dados recebidos do lote:", images);
 
-        // Para a data, o backend deve retornar um campo 'processing_date' (ou similar)
-        // Se o backend não retornar, pode-se usar a data atual como fallback.
-        if (data.processing_date) {
-            const date = new Date(data.processing_date);
-            processingDateSpan.textContent = date.toLocaleDateString('pt-BR'); // Formato DD/MM/YYYY
-        } else {
-            processingDateSpan.textContent = new Date().toLocaleDateString('pt-BR'); // Exemplo: data atual do cliente
-        }
-        
-        // --- Carrossel de Imagens ---
-        // Limpa o carrossel antes de adicionar novas imagens
-        carrosselImagesUl.innerHTML = ''; 
-        if (data.processed_image_url) {
-            // Cria um item para a imagem processada.
-            // Se houver mais imagens (ex: original_image_url), crie mais <li> aqui
-            const processedImageItem = document.createElement('li');
-            processedImageItem.classList.add('carrossel-item', 'active'); // 'active' para o primeiro item
-            processedImageItem.dataset.index = 0; // Para a lógica do carrossel
-            processedImageItem.innerHTML = `<img src="${data.processed_image_url}" alt="Imagem Processada">`;
-            carrosselImagesUl.appendChild(processedImageItem);
+        if (images && images.length > 0) {
+            const firstImage = images[0];
 
-            // Se você quiser adicionar a imagem original também (assumindo que 'original_image_url' seja retornado pelo backend)
-            // if (data.original_image_url) {
-            //     const originalImageItem = document.createElement('li');
-            //     originalImageItem.classList.add('carrossel-item');
-            //     originalImageItem.dataset.index = 1;
-            //     originalImageItem.innerHTML = `<img src="${data.original_image_url}" alt="Imagem Original">`;
-            //     carrosselImagesUl.appendChild(originalImageItem);
-            // }
-
-        } else {
-            const noImageItem = document.createElement('li');
-            noImageItem.classList.add('carrossel-item');
-            noImageItem.innerHTML = '<p>Nenhuma imagem processada disponível.</p>';
-            carrosselImagesUl.appendChild(noImageItem);
-        }
-
-
-        // --- Conteúdo da Seção de Resultados (Tabela de Detecções, Botão Excel) ---
-        let resultsHtml = `
-            <h3>Arquivo Original: ${data.original_filename || 'N/A'}</h3>
-            <div class="results-content-wrapper">
-        `;
-
-        // Tabela de objetos detectados
-        if (data.detection_data && data.detection_data.length > 0) {
-            resultsHtml += `
-                <h4>Objetos Detectados:</h4>
-                <table class="detections-table">
-                    <thead>
-                        <tr>
-                            <th>Objeto</th>
-                            <th>Confiança</th>
-                            <th>Coordenadas (X1, Y1, X2, Y2)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            data.detection_data.forEach(detection => {
-                // Formata as coordenadas da caixa para exibição
-                const boxCoords = detection.box_coords ? `[${detection.box_coords.map(c => c.toFixed(0)).join(', ')}]` : 'N/A';
-                resultsHtml += `
-                        <tr>
-                            <td>${detection.class_name || 'N/A'}</td>
-                            <td>${(detection.confidence * 100).toFixed(2)}%</td>
-                            <td>${boxCoords}</td>
-                        </tr>
-                `;
-            });
-            resultsHtml += `
-                    </tbody>
-                </table>
-            `;
-        } else {
-            resultsHtml += `
-                <p>Nenhum objeto detectado nesta imagem.</p>
-            `;
-        }
-
-        // Botão de download do relatório Excel
-        if (data.excel_report_url) {
-            resultsHtml += `
-                <a href="${data.excel_report_url}" class="download-button" download>Baixar Relatório Excel</a>
-            `;
-        } else {
-            resultsHtml += `
-                <p>Relatório Excel não disponível para este processamento.</p>
-            `;
-        }
-
-        resultsHtml += `</div>`; // Fecha results-content-wrapper
-        resultsContent.innerHTML = resultsHtml;
-
-    } catch (error) {
-        // Captura e exibe erros de API ou de processamento
-        console.error('Erro ao carregar resultados:', error);
-        resultsContent.innerHTML = `<p class="error-message">Erro ao carregar os resultados: ${error.message}. Verifique o ID e a conexão com a API.</p>`;
-    }
-
-    // --- Lógica do Carrossel (navegação) ---
-    // Esta parte deve ser executada APÓS o carrosselImagesUl ter sido preenchido
-    // Assegura que o carrossel funciona mesmo com um único item.
-    const carrosselContainer = document.getElementById('carrosselContainer');
-    const prevBtn = carrosselContainer.querySelector('.prev-btn');
-    const nextBtn = carrosselContainer.querySelector('.next-btn');
-    let currentIndex = 0;
-
-    function updateCarousel() {
-        const items = carrosselImagesUl.querySelectorAll('.carrossel-item');
-        if (items.length === 0) {
-            prevBtn.style.display = 'none'; // Esconde botões se não há imagens
-            nextBtn.style.display = 'none';
-            return;
-        }
-
-        // Garante que currentIndex esteja dentro dos limites
-        currentIndex = (currentIndex + items.length) % items.length;
-
-        items.forEach((item, index) => {
-            if (index === currentIndex) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
+            // 1. Preencher Cabeçalho (Evita o erro de undefined)
+            if (processingIdSpan) processingIdSpan.textContent = firstImage.id.substring(0, 8);
+            if (processingDateSpan) processingDateSpan.textContent = new Date().toLocaleDateString('pt-BR');
+            if (mainObjectTypeSpan) {
+                mainObjectTypeSpan.textContent = (firstImage.detections && firstImage.detections.length > 0) 
+                    ? firstImage.detections[0].class_name 
+                    : "Nenhum";
             }
+
+            // 2. Renderizar Imagens no Carrossel
+            carrosselImagesUl.innerHTML = '';
+            images.forEach((img, index) => {
+            // 1. Em vez de usar o caminho do disco (que causa o erro de 'startsWith'), 
+            // usamos o endpoint de download que o FastAPI já providencia.
+            const imageUrl = `/api/download-processed-image/${img.id}`;
+
+            console.log("A carregar imagem através da API:", imageUrl);
+
+            const li = document.createElement('li');
+            li.className = `carrossel-item ${index === 0 ? 'active' : ''}`;
+            
+            // 2. O src aponta para o endpoint, que retornará o ficheiro real
+            li.innerHTML = `<img src="${imageUrl}" alt="Imagem Processada ${index + 1}" style="max-width:100%; display:block;">`;
+            carrosselImagesUl.appendChild(li);
         });
 
-        // Mostra/Esconde botões de navegação se houver mais de uma imagem
-        if (items.length > 1) {
-            prevBtn.style.display = 'block';
-            nextBtn.style.display = 'block';
         } else {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
+            console.warn("Nenhuma imagem encontrada para este lote.");
         }
+    } catch (error) {
+        console.error("Erro ao renderizar tela de resultados:", error);
     }
-
-    prevBtn.addEventListener('click', () => {
-        currentIndex--;
-        updateCarousel();
-    });
-
-    nextBtn.addEventListener('click', () => {
-        currentIndex++;
-        updateCarousel();
-    });
-
-    // Chama updateCarousel inicialmente para configurar o estado inicial (primeiro item visível)
-    // E também para esconder os botões se houver apenas uma imagem.
-    updateCarousel(); 
 });
+
+async function loadResults() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const batchId = urlParams.get('batch_id');
+
+    if (!batchId) return;
+
+    try {
+        const response = await fetch(`/api/batch-images/${batchId}`);
+        const images = await response.json();
+
+        if (images && images.length > 0) {
+            const firstImageData = images[0];
+            
+            // Preenchimento de IDs e Datas
+            document.getElementById('processingId').textContent = firstImageData.id.substring(0, 8);
+            document.getElementById('processingDate').textContent = new Date().toLocaleDateString('pt-BR');
+            
+            if (firstImageData.detections && firstImageData.detections.length > 0) {
+                document.getElementById('mainObjectType').textContent = firstImageData.detections[0].class_name;
+            }
+
+            const carrosselUl = document.getElementById('carrosselImages');
+            carrosselUl.innerHTML = ''; 
+
+            images.forEach((img, index) => {
+                const li = document.createElement('li');
+                li.className = `carrossel-item ${index === 0 ? 'active' : ''}`;
+                
+                // SOLUÇÃO: Usar o endpoint da API em vez do caminho do disco
+                const imageUrl = `/api/download-processed-image/${img.id}`;
+                console.log("Carregando imagem via API:", imageUrl);
+
+                li.innerHTML = `<img src="${imageUrl}" alt="Processado" style="max-width:100%; display:block;">`;
+                carrosselUl.appendChild(li);
+            });
+
+            // Removida a chamada ao updateCarousel() para evitar o ReferenceError
+            console.log("Imagens carregadas com sucesso.");
+            
+        } else {
+            document.getElementById('resultsContent').innerHTML = "<p>Nenhum dado encontrado.</p>";
+        }
+    } catch (error) {
+        console.error("Erro ao renderizar tela de resultados:", error);
+    }
+}
+
+loadResults();

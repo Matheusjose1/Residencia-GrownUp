@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-
 from app.models.detection_result import DetectionResult
 from app.schemas.detection_schema import DetectionResultCreate # Importe o schema de criação
 

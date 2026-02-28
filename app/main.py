@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pathlib import Path
 from typing import Optional
+import os
 
 # Importar seus routers/endpoints
 from app.api.endpoints import image_comparation
@@ -38,7 +39,12 @@ PROCESSED_IMAGES_DIR.mkdir(parents=True, exist_ok=True) # Criado também via con
 
 # Monta o diretório 'static' para servir arquivos estáticos (frontend: HTML, CSS, JS, imagens)
 # A URL acessível será /static/<nome_do_arquivo>
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 2. O PONTO CHAVE: Servir a pasta 'data' onde as imagens processadas estão
+# Sem isso, o navegador nunca conseguirá ler as fotos.
+if os.path.exists("data"):
+    app.mount("/data", StaticFiles(directory="data"), name="data")
 
 # Configura Jinja2Templates para renderizar arquivos HTML
 # O diretório 'static' é a raiz onde o Jinja2 vai procurar seus templates HTML

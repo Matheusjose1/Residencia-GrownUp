@@ -14,6 +14,7 @@ import traceback
 from PIL import Image
 from datetime import datetime
 import torch
+import cv2
 
 from app.core.database import (
     SessionLocal,
@@ -67,145 +68,146 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
     batch_processing_id = None
 
     try:
+        # 1. Recuperar a entrada da imagem e o ID do lote
         processing_entry = db.query(ImageProcessing).filter(ImageProcessing.id == processing_id).first()
         if not processing_entry:
             raise ValueError(f"Entrada de processamento não encontrada para ID: {processing_id}")
+        
         batch_processing_id = processing_entry.batch_processing_id
 
         print(f"[DEBUG] Executando inferência YOLO para {original_filename}...")
 
+        # 2. Configuração de Hardware e Inferência
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         results = model_yolo_lixeiras(str(file_path), device=device)
+        image_to_draw = cv2.imread(str(file_path))
 
         detection_data = []
-        has_detections = False
-
         results_list = results if isinstance(results, list) else [results]
 
+        # 3. Processar Detecções
         for r in results_list:
             if r.boxes is None or len(r.boxes) == 0:
-                print(
-                    f"[DEBUG_YOLO] r.boxes é None ou vazio para {original_filename}. Pulando detecções para este resultado.")
                 continue
 
             boxes = r.boxes.xyxy.cpu().numpy()
             scores = r.boxes.conf.cpu().numpy()
             classes = r.boxes.cls.cpu().numpy()
 
-            print(
-                f"[DEBUG] Inferência YOLO concluída para {original_filename}. Resultados detectados (len(boxes)): {len(boxes)}.")
+            for i in range(len(boxes)):
+                class_id = int(classes[i])
+                class_name = YOLO_CLASSES.get(class_id, f"unknown_{class_id}")
+                confidence = float(scores[i])
+                classification_type = "Positivo Verdadeiro" if confidence >= CONFIDENCE_THRESHOLD_TP else "Falso Positivo"
 
-            if len(boxes) > 0:
-                for i in range(len(boxes)):
-                    class_id = int(classes[i])
-                    class_name = YOLO_CLASSES.get(class_id, f"unknown_class_{class_id}")
-                    confidence = float(scores[i])
+                detection_data.append({
+                    "image_id": processing_id,
+                    "class_name": class_name,
+                    "confidence": confidence,
+                    "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "classification_type": classification_type
+                })
 
-                    classification_type = "Positivo Verdadeiro" if confidence >= CONFIDENCE_THRESHOLD_TP else "Falso Positivo"
+                # Desenhar Bounding Box (Corrigido os índices de desenho)
+                x1, y1, x2, y2 = boxes[i].astype(int)
+                cv2.rectangle(image_to_draw, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(image_to_draw, f"{class_name} {confidence:.2f}", (x1, y1 - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-                    detection_data.append({
-                        "image_id": processing_id,
-                        "class_name": class_name,
-                        "confidence": confidence,
-                        "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "classification_type": classification_type
-                    })
-                    has_detections = True
-            else:
-                print(f"[DEBUG_YOLO] len(boxes) é 0. Nenhuma detecção válida foi processada.")
-
-        print(f"[DEBUG] Dados de detecção coletados para {original_filename}: {detection_data}")
-
+        # 4. Salvar Imagem Processada
         processed_image_name = f"processed_{processing_id}_{original_filename}"
         processed_image_path = PROCESSED_IMAGES_DIR / processed_image_name
+        cv2.imwrite(str(processed_image_path), image_to_draw)
 
-        if has_detections:
-            annotated_img_array = results_list[0].plot(conf=True, labels=True, boxes=True)
-            Image.fromarray(annotated_img_array[..., ::-1]).save(processed_image_path)
-            print(f"[DEBUG] Imagem processada com caixas desenhadas salva em: {processed_image_path}")
+        # 5. Persistência no Banco de Dados (Lógica de Upsert corrigida)
+        detections_json = json.dumps(detection_data)
+        
+        res_entry = db.query(ImageProcessingResult).filter(
+            ImageProcessingResult.image_processing_id == processing_id
+        ).first()
+
+        if res_entry:
+            res_entry.detection_data = detections_json
+            res_entry.processed_image_path = str(processed_image_path) # Convertido para String
+            res_entry.status = 'completed'
+            res_entry.updated_at = datetime.now()
         else:
-            print(f"[DEBUG] Nenhuma detecção para {original_filename}. Copiando imagem original.")
-            shutil.copy(file_path, processed_image_path)
+            res_entry = ImageProcessingResult(
+                id=str(uuid.uuid4()),
+                image_processing_id=processing_id,
+                detection_data=detections_json,
+                processed_image_path=str(processed_image_path), # Convertido para String
+                status='completed',
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            db.add(res_entry)
 
-        try:
-            result_entry = db.query(ImageProcessingResult).filter(
-                ImageProcessingResult.image_processing_id == processing_id).first()
-            if result_entry:
-                result_entry.detection_data = json.dumps(detection_data)
-                result_entry.processed_image_path = str(processed_image_path)
-                result_entry.status = "completed"
-                db.add(result_entry)
+        # Atualiza a tabela principal
+        processing_entry.status = 'completed'
+        processing_entry.processed_image_path = str(processed_image_path)
+        db.commit()
+
+        # 6. Geração do Relatório Excel
+        if detection_data:
+            excel_file_name = f"relatorio_lote_{batch_processing_id}_imagem_{processing_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            excel_file_path = XLSX_RESULTS_DIR / excel_file_name
+            
+            df = pd.DataFrame(detection_data)
+            df['image_name'] = original_filename
+            df['batch_id'] = batch_processing_id
+            
+            cols = ['batch_id', 'image_name', 'class_name', 'confidence', 'classification_type', 'operation_date']
+            df = df[cols]
+
+            with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+                df.to_excel(writer, sheet_name='Detecções', index=False)
+
+        # 7. LÓGICA VITAL: Verificar se o lote todo terminou para liberar a UI
+        total_images = db.query(ImageProcessing).filter(ImageProcessing.batch_processing_id == batch_processing_id).count()
+        finished_images = db.query(ImageProcessing).filter(
+            ImageProcessing.batch_processing_id == batch_processing_id,
+            ImageProcessing.status.in_(['completed', 'failed'])
+        ).count()
+
+        if total_images > 0 and total_images == finished_images:
+            # Aqui buscamos na tabela BatchProcessing usando a chave primária 'id'
+            # (Note que o seu endpoint de upload usa o UUID no campo 'batch_id' da tabela)
+            batch = db.query(BatchProcessing).filter(BatchProcessing.batch_id == batch_processing_id).first()
+            if batch:
+                # <<<< A CORREÇÃO ESTÁ AQUI >>>>
+                # O nome correto da coluna no seu database.py é overall_status
+                batch.overall_status = 'completed' 
+                batch.processed_images = finished_images
+                batch.completed_images = db.query(ImageProcessing).filter(
+                    ImageProcessing.batch_processing_id == batch_processing_id,
+                    ImageProcessing.status == 'completed'
+                ).count()
+                batch.overall_progress = 100.0
+                batch.updated_at = datetime.now()
+                
                 db.commit()
-                db.refresh(result_entry)
-                print(f"[DEBUG] Resultado de processamento atualizado para {processing_id}.")
-            else:
-                print(f"AVISO: Entrada de resultado para {processing_id} não encontrada. Criando uma nova.")
-                new_result_entry = ImageProcessingResult(
-                    id=processing_id,
-                    image_processing_id=processing_id,
-                    detection_data=json.dumps(detection_data),
-                    processed_image_path=str(processed_image_path),
-                    status="completed",
-                    created_at=datetime.now()
-                )
-                db.add(new_result_entry)
-                db.commit()
-                db.refresh(new_result_entry)
-                print(f"[DEBUG] Nova entrada de resultado criada para {processing_id}.")
-
-            if detection_data:
-                excel_file_name = f"relatorio_lote_{batch_processing_id}_imagem_{processing_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-                excel_file_path = XLSX_RESULTS_DIR / excel_file_name
-                print(f"[DEBUG] Tentando gerar Excel em: {excel_file_path}")
-
-                df = pd.DataFrame(detection_data)
-                df['image_name'] = original_filename
-                df['batch_id'] = batch_processing_id
-
-                cols = ['batch_id', 'image_name', 'class_name', 'confidence', 'classification_type', 'operation_date',
-                        'image_id']
-                df = df[cols]
-
-                with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, sheet_name='Detecções', index=False)
-                    worksheet = writer.sheets['Detecções']
-                    for i, col in enumerate(df.columns):
-                        max_len = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                        worksheet.set_column(i, i, max_len)
-                print(f"[DEBUG] Relatório Excel gerado em: {excel_file_path}")
-            else:
-                print(f"[DEBUG] Nenhuma detecção para {original_filename}. Relatório Excel não será gerado.")
-
-        except Exception as e:
-            db.rollback()
-            print(f"[ERRO CRÍTICO] Falha ao salvar resultados no DB ou gerar Excel para {original_filename}: {e}")
-            traceback.print_exc()
-            update_db_processing_status(db, processing_id, "failed")
-            raise
+                print(f"DEBUG_DB: Lote {batch_processing_id} finalizado com OVERALL_STATUS = 'completed'.")
 
     except Exception as e:
-        print(f"[ERRO CRÍTICO] Falha geral ao processar imagem {original_filename}: {e}")
+        print(f"[ERRO CRÍTICO] Falha ao processar imagem {original_filename}: {e}")
         traceback.print_exc()
-        if db.is_active:
-            db.rollback()
-            db.close()
-        # Se a sessão fechou ou falhou, force uma nova para a atualização de status
-        # Em app/api/endpoints/image_comparation.py, na linha 193
-        await update_db_processing_status(  # <--- Garanta que 'await' esteja aqui
-            processing_id=processing_id,
-            status="failed",
-            message=f"Erro no processamento: {e}",
-            progress=0
-        )
+        db.rollback()
+        
+        # Log de falha na imagem
+        try:
+            processing_entry.status = 'failed'
+            db.commit()
+        except:
+            pass
+            
     finally:
         if file_path.exists():
             try:
                 os.remove(file_path)
-                print(f"[DEBUG] Arquivo temporário RAW removido: {file_path}")
-            except OSError as e:
-                print(f"AVISO: Não foi possível remover o arquivo temporário RAW {file_path}: {e}")
-        if db.is_active:  # Garante que a sessão seja fechada apenas se ainda estiver ativa
-            db.close()
+            except:
+                pass
+        db.close()
 
 
 # Endpoint para upload de imagens
@@ -288,32 +290,27 @@ async def get_result_details_endpoint(result_id: str, db: Session = Depends(get_
 
 
 @router.get("/batch-images/{batch_id}")
-async def get_batch_images_endpoint(batch_id: str, db: Session = Depends(get_db)):
-    images_in_batch = await get_db_all_images_for_batch(batch_id, db)
-    if not images_in_batch:
-        return JSONResponse(content=[], status_code=200)
+async def get_batch_images(batch_id: str, db: Session = Depends(get_db)):
+    images = await get_db_all_images_for_batch(db, batch_id) 
 
-    response_data = []
-    for img in images_in_batch:
-        img_dict = {
-            "id": img.id,
+    if not images:
+        return []
+
+    # Formatar o retorno para garantir que o Frontend recebe o que precisa
+    formatted_images = []
+    for img in images:
+        detections = []
+        if img.result and img.result.detection_data:
+            detections = json.loads(img.result.detection_data)
+            
+        formatted_images.append({
+            "id": img.id,  # Este ID é vital para o /download-processed-image/{id}
             "original_filename": img.original_filename,
-            "status": img.status,
-            "file_path": str(img.file_path) if img.file_path else None,
-            "processed_image_path": None,
-            "detection_data": []
-        }
-        if img.result:
-            img_dict["processed_image_path"] = img.result.processed_image_path
-            try:
-                img_dict["detection_data"] = json.loads(img.result.detection_data) if img.result.detection_data else []
-            except json.JSONDecodeError:
-                img_dict["detection_data"] = []
-        response_data.append(img_dict)
+            "processed_image_path": img.result.processed_image_path if img.result else None,
+            "detections": detections
+        })
 
-    return JSONResponse(content=response_data)
-
-
+    return formatted_images
 @router.get("/download-processed-image/{processing_id}")
 async def download_processed_image(processing_id: str):
     db = SessionLocal()
@@ -383,7 +380,7 @@ async def download_batch_zip(batch_id: str, db: Session = Depends(get_db)):
         zip_file_path = zip_file_output_dir / zip_file_name
 
         with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            images_in_batch = await get_db_all_images_for_batch(batch_id, db)
+            images_in_batch = await get_db_all_images_for_batch(db, batch_id)
 
             if not images_in_batch:
                 raise HTTPException(status_code=404,

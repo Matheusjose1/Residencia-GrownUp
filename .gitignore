@@ -2,3 +2,4 @@ Imagens_Lixeiras
 /.venv
 .idea
 .vscode
+data/output/imagens_processadas

@@ -1,161 +1,91 @@
 // static/script_espera.js
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // ... (Seus elementos DOM e variáveis existentes) ...
+    // 1. CAPTURA RIGOROSA DOS ELEMENTOS
+    // Usamos querySelector para classes e getElementById para IDs conforme o teu HTML
+    const loadingSpinner = document.querySelector('.loading-spinner');
+    const statusMessage = document.getElementById('statusMessage');
+    const instructionsMessage = document.getElementById('instructionsMessage');
+    const progressBarContainer = document.querySelector('.progress-container');
+    const batchSummaryContainer = document.querySelector('.batch-summary');
+    const imageListContainer = document.querySelector('.image-list-container');
+    const infoBox = document.querySelector('.info-box');
+    
+    const batchProgressFill = document.getElementById('batchProgressFill');
+    const batchProgressText = document.getElementById('batchProgressText');
+    const totalImagesSpan = document.getElementById('totalImages');
+    const processedImagesSpan = document.getElementById('processedImages');
+    const completedImagesSpan = document.getElementById('completedImages');
+    const failedImagesSpan = document.getElementById('failedImages');
+    const imageList = document.getElementById('imageList');
 
-    let statusCheckInterval; // Variável para armazenar o ID do setInterval
+    let statusCheckInterval;
     let currentBatchId = new URLSearchParams(window.location.search).get('batch_id');
-    let hasRedirected = false; // Flag para evitar múltiplos redirecionamentos
+    let hasRedirected = false;
 
-    // Função para mostrar mensagens de erro/sucesso (se você tiver uma)
-    function displayMessage(message, type = 'info') {
-        const messageDiv = document.getElementById('statusMessage') || document.createElement('div');
-        messageDiv.id = 'statusMessage';
-        messageDiv.className = `message ${type}`;
-        messageDiv.innerHTML = message;
-        if (!messageDiv.parentNode) {
-            document.querySelector('.processing-panel').prepend(messageDiv);
-        }
-        messageDiv.style.display = 'block';
-    }
-
-    // Função principal para verificar o status do lote
+    // 2. FUNÇÃO DE ATUALIZAÇÃO (Polling)
     async function updateBatchStatus() {
-        if (!currentBatchId || hasRedirected) {
-            // Se não tem batch_id ou já redirecionou, para a verificação
-            showNoBatchInstructions();
-            if (statusCheckInterval) {
-                clearInterval(statusCheckInterval);
-            }
-            return;
-        }
+    if (!currentBatchId || hasRedirected) return;
 
-        try {
-            const response = await fetch(`/api/batch-status/${currentBatchId}`);
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-            const batchData = await response.json();
-            console.log('Dados do Lote recebidos:', batchData);
+    try {
+        const response = await fetch(`/api/batch-status/${currentBatchId}`);
+        if (!response.ok) throw new Error('Erro ao consultar status');
+        
+        const batchData = await response.json();
+        console.log("Dados recebidos do server:", batchData);
 
-            // Atualiza os elementos visuais
-            totalImagesSpan.textContent = batchData.total_images;
-            processedImagesSpan.textContent = batchData.processed_images;
-            completedImagesSpan.textContent = batchData.completed_images;
-            failedImagesSpan.textContent = batchData.failed_images;
+        // 1. MAPEAMENTO CORRETO DOS CAMPOS (Conforme seu JSON de resposta)
+        const status = batchData.overall_status || "";
+        const progress = batchData.overall_progress || 0;
+        const total = batchData.total_images || 0;
+        const processed = batchData.processed_images || 0;
+        const completed = batchData.completed_images || 0;
+        const failed = batchData.failed_images || 0;
 
-            const progress = (batchData.processed_images / batchData.total_images) * 100;
-            batchProgressFill.style.width = `${progress}%`;
-            batchProgressText.textContent = `${Math.round(progress)}%`;
+        // 2. ATUALIZAÇÃO DA INTERFACE
+        if (batchProgressFill) batchProgressFill.style.width = `${progress}%`;
+        if (batchProgressText) batchProgressText.textContent = `${Math.round(progress)}%`;
+        
+        if (totalImagesSpan) totalImagesSpan.textContent = total;
+        if (processedImagesSpan) processedImagesSpan.textContent = processed;
+        if (completedImagesSpan) completedImagesSpan.textContent = completed;
+        if (failedImagesSpan) failedImagesSpan.textContent = failed;
 
-            // Mostra os containers relevantes
-            loadingSpinner.style.display = 'none';
-            progressBarContainer.style.display = 'block';
-            processingMessage.style.display = 'block';
-            batchSummaryContainer.style.display = 'block';
-            imageListContainer.style.display = 'block';
-            infoBox.style.display = 'block';
-
-            // Atualiza a lista de imagens
-            imageList.innerHTML = ''; // Limpa a lista existente
-            if (batchData.images && Array.isArray(batchData.images)) {
-                batchData.images.forEach(image => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <span>${image.original_filename}</span>
-                        <span class="status ${image.status}">${image.status}</span>
-                        ${image.status === 'completed' && image.processed_image_url ?
-                            `<a href="${image.processed_image_url}" target="_blank" class="view-link" title="Ver Imagem Processada">
-                                <i class="fas fa-eye"></i>
-                             </a>` : ''
-                        }
-                        ${image.status === 'completed' && image.excel_report_url ?
-                            `<a href="${image.excel_report_url}" target="_blank" class="download-link" title="Baixar Relatório Excel">
-                                <i class="fas fa-file-excel"></i>
-                             </a>` : ''
-                        }
-                    `;
-                    imageList.appendChild(li);
-                });
-            } else {
-                console.warn("batchData.images não é um array ou está vazio:", batchData.images);
-            }
-
-            // Lógica de REDIRECIONAMENTO para a página de resultados
-            if (batchData.status === 'completed_batch' && !hasRedirected) { // O status 'completed_batch' indica que o lote inteiro foi concluído
-                console.log('Lote concluído. Redirecionando para a página de resultados...');
-                hasRedirected = true; // Define a flag para true
-                clearInterval(statusCheckInterval); // Para de verificar
-                // Adiciona um pequeno atraso antes de redirecionar para o usuário ver o 100%
-                setTimeout(() => {
-                    window.location.href = `/painel_resultados?batch_id=${currentBatchId}`; // Redireciona com o ID do lote
-                }, 1500); // 1.5 segundos de atraso
-            } else if (batchData.status === 'failed_batch' && !hasRedirected) {
-                console.error('Lote falhou. Exibindo mensagem de erro.');
-                hasRedirected = true;
-                clearInterval(statusCheckInterval);
-                displayMessage('O processamento do lote falhou. Por favor, tente novamente.', 'error');
-                // Opcional: redirecionar para uma página de erro ou upload
-            }
-
-        } catch (error) {
-            console.error('Erro ao buscar status do lote:', error);
-            // Se o lote não for encontrado (ex: 404), mostre as instruções de não-lote
-            if (error.message.includes('404')) {
-                showNoBatchInstructions();
-            }
-            clearInterval(statusCheckInterval); // Para a verificação em caso de erro
-        }
-    }
-
-    // Função para mostrar instruções quando não há batch_id
-    function showNoBatchInstructions() {
-        const mainElement = document.querySelector('main');
-        let instructionsDiv = document.getElementById('instructionsMessage');
-        if (!instructionsDiv) {
-            instructionsDiv = document.createElement('div');
-            instructionsDiv.id = 'instructionsMessage';
-            instructionsDiv.className = 'message info';
-            instructionsDiv.style.marginTop = '20px';
-            const processingPanel = document.querySelector('.processing-panel');
-            if (processingPanel) {
-                processingPanel.appendChild(instructionsDiv);
-            } else {
-                mainElement.appendChild(instructionsDiv);
-            }
-        }
-        instructionsDiv.innerHTML = `
-            <h3>Bem-vindo ao Painel de Espera!</h3>
-            <p>Para monitorar o progresso do processamento de suas imagens, por favor, inicie um novo lote na página de upload.</p>
-            <p><a href="/painel_upload" class="button">Fazer Novo Upload</a></p>
-            <p style="font-size: 0.9em; color: #888;">Você será redirecionado para esta página automaticamente após enviar suas imagens.</p>
-        `;
-        instructionsDiv.style.display = 'block';
-
-        if (statusCheckInterval) {
+        // 3. LOGICA DE PARADA E REDIRECIONAMENTO
+        if (status.toLowerCase() === 'completed' && !hasRedirected) {
+            console.log("Sucesso! Parando loop e redirecionando para resultados...");
+            hasRedirected = true;
             clearInterval(statusCheckInterval);
-            statusCheckInterval = null;
+            
+            // Redireciona para a página de resultados
+            window.location.href = `/painel_resultado?batch_id=${currentBatchId}`;
         }
+    } catch (error) {
+        console.error('Erro crítico no polling:', error);
     }
+}
 
-    // Inicialização: Verifica se há um batch_id na URL
+    // 3. INICIALIZAÇÃO
     if (currentBatchId) {
-        console.log('Batch ID encontrado na URL:', currentBatchId);
-        // Esconde as instruções iniciais e mostra o spinner/progresso
-        document.getElementById('instructionsMessage').style.display = 'none';
-        loadingSpinner.style.display = 'block';
-        processingMessage.style.display = 'block'; // Mostra a mensagem "Nossa inteligência artificial..."
-        progressBarContainer.style.display = 'block'; // Mostra a barra de progresso (vazia no início)
-        batchSummaryContainer.style.display = 'block'; // Mostra o resumo
-        imageListContainer.style.display = 'block'; // Mostra a lista
-        infoBox.style.display = 'block'; // Mostra a caixa de info
+        console.log('Batch ID encontrado:', currentBatchId);
+        
+        // Exibir elementos de carregamento
+        if (instructionsMessage) instructionsMessage.style.display = 'none';
+        if (loadingSpinner) loadingSpinner.style.display = 'block';
+        if (statusMessage) statusMessage.style.display = 'block';
+        if (progressBarContainer) progressBarContainer.style.display = 'block';
+        if (batchSummaryContainer) batchSummaryContainer.style.display = 'block';
+        if (imageListContainer) imageListContainer.style.display = 'block';
+        if (infoBox) infoBox.style.display = 'block';
 
-        // Inicia a primeira verificação imediatamente
+        // Iniciar ciclo de verificação
         updateBatchStatus();
-        // Configura a verificação a cada 2 segundos
         statusCheckInterval = setInterval(updateBatchStatus, 2000);
     } else {
-        console.log('Nenhum Batch ID encontrado na URL. Mostrando instruções.');
-        showNoBatchInstructions();
+        // Se não hai ID, mostra mensagem de erro no painel
+        if (instructionsMessage) {
+            instructionsMessage.style.display = 'block';
+            instructionsMessage.innerHTML = "Nenhum lote encontrado. <a href='/static/painel_upload.html'>Voltar ao Upload</a>";
+        }
     }
 });
