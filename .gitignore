@@ -3,3 +3,5 @@ Imagens_Lixeiras
 .idea
 .vscode
 data/output/imagens_processadas
+*.db
+*.xlsx

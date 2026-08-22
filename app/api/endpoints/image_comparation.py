@@ -210,7 +210,7 @@ async def process_image_task(processing_id: str, file_path: Path, original_filen
         db.close()
 
 
-# Endpoint para upload de imagens
+
 @router.post("/upload-image")
 async def upload_image(files: List[UploadFile] = File(...), background_tasks: BackgroundTasks = None):
     if not files:
@@ -218,11 +218,8 @@ async def upload_image(files: List[UploadFile] = File(...), background_tasks: Ba
 
     batch_id = str(uuid.uuid4())
 
-    # <<<<<< CORREÇÃO AQUI >>>>>>
-    # create_db_batch_entry já gerencia sua própria sessão do DB.
-    # Removida a criação e fechamento de sessão local aqui.
     try:
-        await create_db_batch_entry(batch_id, len(files))  # <<-- CHAMA SEM PASSAR 'db'
+        await create_db_batch_entry(batch_id, len(files))  
     except Exception as e:
         print(f"Erro ao criar entrada de lote no DB: {e}")
         traceback.print_exc()
